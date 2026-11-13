@@ -4,7 +4,9 @@
 
 [Mở notebook trên Colab](https://colab.research.google.com/github/HongQuang26/pitchops/blob/main/notebooks/PitchOps_Colab.ipynb) · [Hướng dẫn chi tiết](docs/HUONG_DAN.md) · [Kiến trúc và lộ trình](docs/ARCHITECTURE.md) · [Nguồn và quyền sử dụng](docs/DATA_SOURCES.md)
 
-Đã chạy trên Colab với **2.252 trận**, **31 kiểm thử đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
+Đã chạy trên Colab với **2.252 trận**, **51 kiểm thử đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
+
+Event Lab đã chạy thêm **62 trận trước cutoff / 1.890 lượt cầu thủ**, PI test MAE **0,2496** so với baseline **0,3268**, spatial NLL **4,0408** so với uniform **4,5643**. Các kết quả này thuộc cohort lịch sử nhỏ, không gộp vào test CLB.
 
 ## Chạy lần đầu
 

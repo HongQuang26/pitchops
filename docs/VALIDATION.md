@@ -51,3 +51,31 @@ MLflow, provider StatsBomb và các mô-đun cầu thủ có code nhưng không 
 - Đã mở lại notebook trong phiên Colab mới sau thời gian ngắt. Chạy setup, nối Drive, mở mục 5 bằng `latest_dashboard`; đọc được view đã lưu và kiểm tra ghi–đọc vẫn đạt. Không chạy thu thập, training hoặc đồng bộ API ảnh trong bước khôi phục này.
 - Browser QA trên view khôi phục: logo Arsenal/Man City tải được (`naturalWidth > 0`); miniface Bukayo Saka được nhúng và tải được ở độ rộng gốc 200px; tìm Saka, mở hồ sơ đúng ID `thesportsdb:34169884`, bật theo dõi (`aria-pressed=true`); lọc Arsenal + GK trả David Raya. Danh sách Premier League hiển thị 46 hồ sơ trong số 112 hồ sơ toàn danh mục.
 - Favorites được kiểm tra trong phiên trình duyệt; chưa cam kết lưu vào Drive. Chưa xác nhận mọi kích thước/thiết bị. Các giới hạn mô hình của v0.1 vẫn áp dụng.
+
+## Xác nhận v0.3 / Event Lab trên Colab
+
+- Source commit huấn luyện: `9c62cce29cd9dc36bda9d9411d9ad606abdb89ab`. Event run `events-20261113T142018639134Z`.
+- Cache đủ 64 trận StatsBomb FIFA World Cup nam 2022. Parser đối chiếu bàn 90 phút với metadata khi không có hiệp phụ, xác nhận winner của mọi trận knockout; tách luân lưu/ET, thay người và vị trí từ sự kiện của chính cầu thủ. Các quality gate đều qua trên dataset thật.
+- Cutoff `2022-12-15`: 62 trận, 1.890 dòng player-match, 32 đội, 665 cầu thủ trong nhóm gần nhất. Không dùng hai trận cuối làm training.
+- `51 passed in 2.25s` trên Colab: thêm parser 90 phút/ET/penalty/substitution/own goal, vị trí cầu thủ thay người, spatial bounds, hai lượt/knockout conservation/determinism, journal timing/immutability, loại vị trí tương lai, MOTM probability mass, calendar không lộ entrants chưa biết, giữ analytics view khi migration, retry weekly jobs, API budget/cache/key hygiene, CSV IDs, scorer future exclusion.
+- Team temporal test từ 06/12/2022, 8 trận / 16 team-match; validation từ 02/12. Test log loss 1,081612, Brier 0,650267. Tập nhỏ, chỉ là nghiên cứu.
+
+| Target | Lựa chọn validation | Test MAE | Baseline MAE |
+|---|---|---:|---:|
+| Goals | Regularized Poisson | 1,180314 | 1,201389 |
+| Corners | Regularized Poisson | 1,693114 | 2,024306 |
+| Shots | Regularized Poisson | 3,085539 | 3,396991 |
+| Throw-ins | Mean baseline | 4,788194 | 4,788194 |
+| Control proxy (0–1) | Ridge | 0,101544 | 0,103859 |
+
+- PI Ridge: MAE **0,249603**, rolling baseline 0,326809, 238 lượt cầu thủ thực tế ra sân; validation interval radius 0,516361, coverage test **92,44%**. Đây là nhãn dự án tự tính, không phải rating chính thức.
+- Scorer backtest: 342 ứng viên gồm người không ra sân; coverage appearance thực tế 96,22%; goal-count MAE 0,108025; count NLL 0,243434; scorer Brier 0,043457; appearance Brier 0,160030. Dự báo score rate trung bình 5,49%, quan sát 4,68%. Số bàn bằng 0 chiếm đa số, MAE nhỏ không chứng minh khả năng chọn người ghi bàn chính xác. Chưa có calibration hoặc kiểm định ngoài cohort.
+- Spatial: 35.118 sự kiện heldout, NLL **4,040819** so với uniform **4,564348**, grid 12 × 8. Dự báo vị trí sự kiện, không tracking.
+- Journal của run: 2 replay sau cutoff, 0 live; replay log loss 1,126476 / Brier 0,682422 / accuracy 50%. Không tuyên bố đây là live forecast đã được tạo trong 2022. Các phiên bản run được chấm riêng.
+- Models, source manifest/hash, player logs, model card, requirements lock, metrics, snapshot và HTML lưu tại Drive; kiểm tra ghi–đọc đạt. Không commit các tệp dữ liệu/ảnh/model vào public repo.
+
+### Kiểm tra snapshot đã lưu
+
+12/12 kiểm tra trên dữ liệu thật đã đạt trong Colab: xác suất 992 cặp đấu tổng 1, control share tổng 1, player goal share giữ đúng 10% reserve, spatial density tổng 1, cup title mass, chỉ hai đội final còn xác suất vô địch, XI đủ 11 ID khác nhau, Lisandro Martínez nhận DF từ sự kiện bản thân, journal 2 replay/0 live, đủ model/manifest/card/environment artifacts, model `joblib` đọc lại cho cùng goal means, và analytics view vẫn là latest sau migration. Chạy Event Research lần tiếp theo phục hồi từ Drive, không huấn luyện lại.
+
+Browser QA v0.3: Event Lab hiển thị đúng 62/64 trận, 665 cầu thủ và 1.890 player-match; chuyển tab match/spatial/XI/cup/audit hoạt động; đổi heatmap observed/predicted; XI 4–3–3 có hai trận cuối đủ điều kiện; cup chính thức chỉ Argentina/France còn title probability 51,0%/49,0%, mỗi đội final 100%; nhánh bốn đội giả định được gắn nhãn riêng; audit hiển thị scorer/appearance/spatial test metrics.
