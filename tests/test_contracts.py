@@ -56,3 +56,24 @@ def test_cached_provider_budget_blocks_new_requests(tmp_path):
     (tmp_path/"www.football-data.co.uk.json").write_text(json.dumps([{"time":time.time(),"url":"a"},{"time":time.time(),"url":"b"}]))
     with pytest.raises(RuntimeError,match="budget"):
         CachedHTTP(tmp_path).get("https://www.football-data.co.uk/new.xlsx")
+
+def test_completed_season_preserves_known_champion():
+    teams=[f"T{i:02d}" for i in range(20)]
+    rows=[dict(league="E0",season="2425",date=pd.Timestamp("2025-05-01"),home=h,away=a,hg=2 if h=="T00" else 0,ag=2 if a=="T00" else 0) for h in teams for a in teams if h!=a]
+    result=simulate_league(pd.DataFrame(rows),"E0","2425",{}, {},simulations=30)
+    assert result["status"]=="completed"
+    assert result["remaining_matches"]==0
+    assert result["table"][0]["team"]=="T00"
+    assert result["table"][0]["title"]==1
+    assert result["table"][0]["expected_points"]==114
+
+def test_simulation_reproducibility_and_conservation():
+    teams=[f"T{i:02d}" for i in range(20)]
+    data=pd.DataFrame([dict(league="E0",season="2425",date=pd.Timestamp("2024-08-01"),home=teams[i],away=teams[i+1],hg=1,ag=0) for i in range(0,20,2)])
+    models={"goals":None,"corners":None,"shots":None,"selected":"baseline","baseline":{"global":1.3,"rates":{}}}
+    a=simulate_league(data,"E0","2425",models,{},simulations=100,seed=12)
+    b=simulate_league(data,"E0","2425",models,{},simulations=100,seed=12)
+    assert a==b
+    assert abs(sum(row["title"] for row in a["table"])-1)<1e-10
+    assert a["remaining_matches"]==370
+    assert all(row["expected_points"]>=row["points"] for row in a["table"])

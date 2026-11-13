@@ -26,6 +26,7 @@ def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=50
         raise ValueError("No completed matches before cutoff")
     canonical = matches.to_csv(index=False).encode()
     data_hash = hashlib.sha256(canonical).hexdigest()
+    forecast_date = pd.Timestamp(as_of).normalize() if as_of else pd.Timestamp.now().normalize()
     print(f"2/6 Building point-in-time features for {len(matches):,} matches", flush=True)
     features, state = build_features(matches)
     print("3/6 Training + chronological validation + untouched test", flush=True)
@@ -39,14 +40,14 @@ def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=50
         commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL).strip()
     except (OSError, subprocess.CalledProcessError):
         commit = "uncommitted"
-    metadata = {"run_id": run_id, "created_at": datetime.now(timezone.utc).isoformat(), "data_sha256": data_hash, "code_commit": commit, "python": platform.python_version(), "sklearn": sklearn.__version__, "numpy": np.__version__, "pandas": pd.__version__, "training_from": str(matches.date.min().date()), "training_through": str(matches.date.max().date()), "forecast_date": str((matches.date.max() + pd.Timedelta(days=1)).date()), "seed": 42, "source": "football-data.co.uk", "source_manifests": manifests, "matches": len(matches), "features": len(features), "calibration": "Reliability measured on test; no post-hoc calibration fitted; Poisson independence assumption", "status": "research"}
+    metadata = {"run_id": run_id, "created_at": datetime.now(timezone.utc).isoformat(), "data_sha256": data_hash, "code_commit": commit, "python": platform.python_version(), "sklearn": sklearn.__version__, "numpy": np.__version__, "pandas": pd.__version__, "training_from": str(matches.date.min().date()), "training_through": str(matches.date.max().date()), "forecast_date": str(forecast_date.date()), "seed": 42, "source": "football-data.co.uk", "source_manifests": manifests, "matches": len(matches), "features": len(features), "calibration": "Reliability measured on test; no post-hoc calibration fitted; Poisson independence assumption", "status": "research"}
     payload = {"meta": metadata, "metrics": report, "leagues": {}}
     print("4/6 Forecasting all within-league home-away combinations", flush=True)
     for league in sorted(matches.league.unique()):
         season = sorted(matches[matches.league == league].season.unique())[-1]
         current = matches[(matches.league == league) & (matches.season == season)]
         teams = sorted(set(current.home) | set(current.away))
-        date = matches.date.max() + pd.Timedelta(days=1)
+        date = forecast_date
         pairs = [(h, a) for h in teams for a in teams if h != a]
         frame = pd.DataFrame([r for h, a in pairs for r in match_rows(h, a, league, date, state)])
         forecasts = predict_rows(models, frame)
@@ -58,7 +59,7 @@ def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=50
             dist["corners"] = forecasts["corners"][2*i:2*i+2] if forecasts["corners"] else None
             dist["shots"] = forecasts["shots"][2*i:2*i+2] if forecasts["shots"] else None
             lookup[home + "|" + away] = dist
-        race = simulate_league(matches, league, season, models, state, simulations)
+        race = simulate_league(matches, league, season, models, state, simulations, as_of=forecast_date)
         payload["leagues"][league] = {"name": LEAGUES[league], "season": season, "teams": teams, "forecasts": lookup, "race": race, "matches": len(current), "last_result": str(current.date.max().date()), "sparse_teams": [t for t in teams if len(state.get((league,t),[])) < 5]}
     print("5/6 Recording artifacts + data-quality and drift summaries", flush=True)
     numeric = ["own_gf", "own_ga", "own_points", "own_rest"]

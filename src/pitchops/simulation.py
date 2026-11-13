@@ -9,7 +9,7 @@ from .models import predict_rows
 
 EXPECTED_TEAMS = {"E0": 20, "SP1": 20, "D1": 18, "I1": 20, "F1": 18}
 
-def simulate_league(matches, league, season, models, state, simulations=5000, seed=42):
+def simulate_league(matches, league, season, models, state, simulations=5000, seed=42, as_of=None):
     played = matches[(matches.league == league) & (matches.season == season)]
     teams = sorted(set(played.home) | set(played.away))
     if len(teams) != EXPECTED_TEAMS[league]:
@@ -27,7 +27,7 @@ def simulate_league(matches, league, season, models, state, simulations=5000, se
         gf[a] += m.ag
     seen = set(zip(played.home, played.away))
     remaining = [(h, a) for h in teams for a in teams if h != a and (h, a) not in seen]
-    date = played.date.max() + pd.Timedelta(days=1)
+    date = pd.Timestamp(as_of) if as_of is not None else played.date.max() + pd.Timedelta(days=1)
     features = [row for h, a in remaining for row in match_rows(h, a, league, date, state)]
     means = predict_rows(models, pd.DataFrame(features))["goals"] if features else []
     rng = np.random.default_rng(seed)
