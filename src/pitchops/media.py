@@ -226,9 +226,10 @@ def sync_media(root, payload, api_key=None, max_rosters=50, embed_images=True, m
     return catalog
 
 def enrich_dashboard(root, api_key=None, max_rosters=50, embed_images=True, refresh_rosters=True):
-    from .storage import latest_run
+    from .storage import latest_dashboard
     from .dashboard import render_dashboard
-    payload, model_run_dir = latest_run(root)
+    payload, _ = latest_dashboard(root)
+    model_run_dir = Path(root)/'artifacts'/'runs'/payload['meta']['run_id']
     catalog = sync_media(Path(root)/'data'/'media', payload, api_key, max_rosters, embed_images, refresh_rosters=refresh_rosters)
     payload['media'] = catalog
     payload.setdefault('meta',{})['media_updated_at'] = catalog['retrieved_at']

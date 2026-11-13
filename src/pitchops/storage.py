@@ -67,7 +67,7 @@ def migrate_workspace(source, destination):
     if runs:
         latest = runs[-1]
         atomic_json(destination / 'artifacts' / 'latest.json', {"run_id": latest.parent.name, "snapshot": str(latest)})
-        views = sorted((destination/'artifacts'/'views').glob(latest.parent.name+'-media-*/snapshot.json'))
+        views = sorted((destination/'artifacts'/'views').glob(latest.parent.name+'-*/snapshot.json'),key=lambda p:p.stat().st_mtime)
         if views:
             atomic_json(destination/'artifacts'/'latest_view.json', {'model_run_id':latest.parent.name,'view_id':views[-1].parent.name})
     atomic_json(destination / 'migration_report.json', report)
