@@ -16,3 +16,14 @@ mlruns/
 *.csv
 !examples/*.csv
 .ipynb_checkpoints/
+
+# Private CI delivery/keys never belong in the public source tree.
+.keys/
+*.enc
+weekly_report.json
+weekly_failure.json
+weekly_receipt.json
+ci_workspace/
+delivery/
+build/
+dist/

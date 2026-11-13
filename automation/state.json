@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "status": "initialized",
+  "provider_attempts": [
+    {
+      "url": "https://www.football-data.co.uk/mmz4281/2526/all-euro-data-2025-2026.xlsx",
+      "time": 1794551512.5960958
+    },
+    {
+      "url": "https://www.football-data.co.uk/mmz4281/2627/all-euro-data-2026-2027.xlsx",
+      "time": 1794551518.8681886
+    }
+  ],
+  "last_success_at": "2026-11-13T06:38:01+00:00",
+  "last_success": {
+    "run_id": "20261113T063801Z-b519b17d2a",
+    "origin": "verified Colab training"
+  },
+  "promoted_model": null
+}

@@ -25,6 +25,8 @@ class CachedHTTP:
     for personal/academic use. Budget is global to this cache, not per URL.
     Keep the cache across Colab sessions; do not reset it to evade the limit.
     """
+    request_guard = None  # Optional process-wide CI guard; called before a network attempt.
+
     def __init__(self, root):
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
@@ -46,6 +48,8 @@ class CachedHTTP:
                 print("Using cached snapshot: provider budget reached; freshness is recorded.")
                 return path.read_bytes()
             raise RuntimeError("Weekly provider download budget reached. Reuse the persistent cache or import a manually downloaded file.")
+        guard=type(self).request_guard
+        if guard is not None:guard(url)
         # Record attempts before HTTP so retries cannot silently exceed the budget.
         ledger.append({"url": url, "time": now})
         atomic_json(ledger_path, ledger)

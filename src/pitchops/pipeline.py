@@ -15,7 +15,7 @@ from .features import build_features, match_rows
 from .models import train_and_evaluate, predict_rows, score_distribution
 from .simulation import simulate_league
 
-def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=5000, local_files=None):
+def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=5000, local_files=None, run_context=None):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     print("1/6 Collecting cached academic snapshots", flush=True)
@@ -34,13 +34,14 @@ def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=50
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_id = timestamp + "-" + data_hash[:10]
     run_dir = root / "artifacts" / "runs" / run_id
-    run_dir.mkdir(parents=True, exist_ok=True)
+    run_dir.mkdir(parents=True, exist_ok=False)
     joblib.dump({"models": models, "state": state, "as_of": as_of, "data_hash": data_hash}, run_dir / "model.joblib")
     try:
         commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL).strip()
     except (OSError, subprocess.CalledProcessError):
         commit = "uncommitted"
     metadata = {"run_id": run_id, "created_at": datetime.now(timezone.utc).isoformat(), "data_sha256": data_hash, "code_commit": commit, "python": platform.python_version(), "sklearn": sklearn.__version__, "numpy": np.__version__, "pandas": pd.__version__, "training_from": str(matches.date.min().date()), "training_through": str(matches.date.max().date()), "forecast_date": str(forecast_date.date()), "seed": 42, "source": "football-data.co.uk", "source_manifests": manifests, "matches": len(matches), "features": len(features), "calibration": "Reliability measured on test; no post-hoc calibration fitted; Poisson independence assumption", "status": "research"}
+    metadata['execution_context']=run_context or {'environment':'interactive Colab/manual'}
     payload = {"meta": metadata, "metrics": report, "leagues": {}}
     media_path = root/'data'/'media'/'catalog.json'
     if media_path.exists():
@@ -74,13 +75,14 @@ def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=50
     atomic_json(run_dir / "snapshot.json", payload)
     atomic_json(run_dir / "metrics.json", report)
     atomic_json(run_dir / "model_card.json", metadata)
-    atomic_json(root / "artifacts" / "latest.json", {"run_id": run_id, "snapshot": str(run_dir / "snapshot.json")})
     # Environment lock is run-specific; do not silently claim untested exact pins.
     freeze = subprocess.run(["python", "-m", "pip", "freeze"], capture_output=True, text=True, check=True)
     (run_dir / "requirements-lock.txt").write_text(freeze.stdout)
     print("6/6 Rendering interactive offline dashboard", flush=True)
     from .dashboard import render_dashboard
     render_dashboard(payload, run_dir / "dashboard.html")
+    # A failed environment capture/render must never replace the last good run.
+    atomic_json(root / "artifacts" / "latest.json", {"run_id": run_id, "snapshot": str(run_dir / "snapshot.json")})
     print(json.dumps({"run_id": run_id, "selected": report["selected"], "test_log_loss": report["test"]["log_loss"], "test_baseline_log_loss": report["test_baseline"]["log_loss"], "dashboard": str(run_dir / "dashboard.html")}, indent=2), flush=True)
     return payload, run_dir
 

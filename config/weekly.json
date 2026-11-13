@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "repository": "HongQuang26/pitchops",
+  "schedule_utc": "23 7 * * 5",
+  "schedule_vietnam": "14:23 thứ Sáu hằng tuần",
+  "leagues": ["E0", "SP1", "D1", "I1", "F1"],
+  "history_seasons": 2,
+  "simulations": 5000,
+  "minimum_test_matches": 100,
+  "maximum_test_log_loss_ratio": 1.05,
+  "maximum_in_season_match_age_days": 21,
+  "minimum_request_interval_seconds": 604800,
+  "provider_requests_per_window": 2,
+  "automatic_retries": 2,
+  "artifact_recipient": "config/artifact-recipient.pem"
+}
