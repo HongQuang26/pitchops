@@ -1,4 +1,4 @@
-"""Self-contained HTML output: runs inside Colab, with no CDN or public tunnel."""
+"""Snapshot HTML with embedded cached artwork and optional remote image fallbacks."""
 import json
 from pathlib import Path
 

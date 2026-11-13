@@ -1,5 +1,11 @@
 # Hướng dẫn chạy và phát triển trên Colab
 
+## Mở lại dashboard sau khi Colab ngắt phiên
+
+Trong notebook đã lưu của bạn, chỉ cần chạy **mục 1** để lấy code/cài thư viện, **mục 2** để gắn Drive, rồi **mục 5** để mở dashboard. Bước mở dashboard dùng `latest_dashboard(WORKSPACE)` để đọc view mới nhất trên Drive; không cần chạy lại mục huấn luyện hoặc gọi API ảnh chỉ để xem kết quả.
+
+`USE_DRIVE=True` lưu cache, model và view dưới `MyDrive/PitchOps/workspace`. Khi có dữ liệu mới cần học lại, chạy mục 4 với `RETRAIN=True`. Khi chỉ cập nhật giao diện/ảnh, dùng model hiện có với `RETRAIN=False`. Các ảnh chưa nhúng cần mạng; logo và miniface đã nhúng tiếp tục hiển thị trong HTML lưu sẵn.
+
 ## Lần đầu
 
 Mở [PitchOps_Colab.ipynb](https://colab.research.google.com/github/HongQuang26/pitchops/blob/main/notebooks/PitchOps_Colab.ipynb), bấm **Sao chép vào Drive**, rồi chạy từng ô bằng nút tam giác. Mỗi ô có mô tả trước lệnh. Dùng CPU; mô hình hiện tại không cần GPU.

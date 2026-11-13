@@ -37,6 +37,17 @@ MAE phạt góc: 2.118872; MAE cú sút: 4.159212, mỗi chỉ số đo trên 94
 - Dữ liệu dùng trong lần chạy: 0 trận trùng, 0 nhãn bàn thắng thiếu sau chuẩn hóa, 100% coverage cặp nhãn góc/cú sút; trận gần nhất cách ngày chạy 5 ngày.
 - Browser QA: chọn giải, chọn Arsenal/Man City, đổi sân, màn hình phân phối tỉ số, bảng đua, MLOps scorecard và trạng thái thiếu dữ liệu cầu thủ.
 - Dashboard thực tế chứa run ID và source commit ở trên, được mở trong output Colab. Giao diện có CSS đáp ứng; chưa xác nhận bằng browser ở mọi kích thước/thiết bị.
-- Model, JSON metrics, model card, snapshot, HTML và environment lock đã được tạo dưới workspace Colab. Backup riêng được tạo bằng ô tải trong notebook; Drive mount là tùy chọn và chưa được bật trong lần chạy thử.
+- Model, JSON metrics, model card, snapshot, HTML và environment lock đã được tạo dưới workspace Colab. Trong phiên v0.1 này, Drive chưa bật; phiên v0.2 bên dưới đã chuyển và xác minh lưu Drive.
 
 MLflow, provider StatsBomb và các mô-đun cầu thủ có code nhưng không được chạy với dữ liệu thật trong lần xác nhận này. Chưa có dịch vụ chạy nền, API production, global player coverage, dự báo MOTM/rating/heatmap hoặc engine cúp quốc tế.
+
+## Xác nhận bản v0.2 với Google Drive và ảnh cầu thủ
+
+- Source commit chức năng: `0848f692b039655a91a623ba771065db91d26058`.
+- `USE_DRIVE=True`; workspace thực tế `/content/drive/MyDrive/PitchOps/workspace`. Người dùng hoàn tất xác nhận Drive. Đã chuyển 19 tệp từ workspace cũ và kiểm tra SHA256 cho 19 bản sao. Kiểm tra ghi–đọc Drive đạt.
+- `31 passed in 1.36s` trong Colab, gồm cả kiểm thử migration, merge quota ledger, chống ghi đè model, image URL allowlist, ghép alias chính xác, ID cầu thủ có namespace, giữ snapshot huấn luyện bất biến và loại huấn luyện viên/nhân viên khỏi danh mục cầu thủ.
+- Kết quả đồng bộ: **5 logo giải, 96/96 logo đội trong 5 giải hỗ trợ, 112 hồ sơ cầu thủ, 97 hồ sơ có URL ảnh nguồn**. 149 ảnh trong tập logo/miniface ưu tiên được cache và nhúng; các ảnh khác có thể cần mạng. Danh sách cầu thủ là một phần theo độ phủ/gói API, không phải toàn bộ đội hình.
+- View được tạo và lưu riêng trong `artifacts/views`, không huấn luyện lại hoặc sửa trọng số/model snapshot chỉ để cập nhật ảnh.
+- Đã mở lại notebook trong phiên Colab mới sau thời gian ngắt. Chạy setup, nối Drive, mở mục 5 bằng `latest_dashboard`; đọc được view đã lưu và kiểm tra ghi–đọc vẫn đạt. Không chạy thu thập, training hoặc đồng bộ API ảnh trong bước khôi phục này.
+- Browser QA trên view khôi phục: logo Arsenal/Man City tải được (`naturalWidth > 0`); miniface Bukayo Saka được nhúng và tải được ở độ rộng gốc 200px; tìm Saka, mở hồ sơ đúng ID `thesportsdb:34169884`, bật theo dõi (`aria-pressed=true`); lọc Arsenal + GK trả David Raya. Danh sách Premier League hiển thị 46 hồ sơ trong số 112 hồ sơ toàn danh mục.
+- Favorites được kiểm tra trong phiên trình duyệt; chưa cam kết lưu vào Drive. Chưa xác nhận mọi kích thước/thiết bị. Các giới hạn mô hình của v0.1 vẫn áp dụng.

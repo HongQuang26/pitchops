@@ -4,7 +4,7 @@
 
 [Mở notebook trên Colab](https://colab.research.google.com/github/HongQuang26/pitchops/blob/main/notebooks/PitchOps_Colab.ipynb) · [Hướng dẫn chi tiết](docs/HUONG_DAN.md) · [Kiến trúc và lộ trình](docs/ARCHITECTURE.md) · [Nguồn và quyền sử dụng](docs/DATA_SOURCES.md)
 
-Đã chạy trên Colab với **2.252 trận**, **12 kiểm thử đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
+Đã chạy trên Colab với **2.252 trận**, **31 kiểm thử đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
 
 ## Chạy lần đầu
 
@@ -16,7 +16,7 @@
 
 Mọi lệnh cài đặt, kiểm thử, tải dữ liệu và huấn luyện trong hướng dẫn đều chạy trên Colab của bạn. GitHub lưu code và notebook; dữ liệu thô, API key, model và output riêng không được commit.
 
-Bản v0.2 thêm **lưu Drive mặc định, chuyển checkpoint có kiểm tra hash, logo giải/đội, miniface, tìm cầu thủ, lọc đội/vị trí và hồ sơ nguồn**. [Cách lưu và đồng bộ ảnh](docs/MEDIA_AND_DRIVE.md).
+Bản v0.2 thêm **lưu Drive mặc định, chuyển checkpoint có kiểm tra hash, logo 5 giải và 96/96 đội, danh mục 112 cầu thủ với 97 ảnh nguồn, tìm/lọc cầu thủ và hồ sơ có credit**. Đã kiểm tra mở lại dashboard từ Drive trong phiên Colab mới. [Cách lưu và đồng bộ ảnh](docs/MEDIA_AND_DRIVE.md).
 
 ## Phạm vi đã triển khai
 
