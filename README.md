@@ -10,11 +10,13 @@
 
 1. Mở notebook trên Colab, chọn **Sao chép vào Drive** để lưu bản của bạn.
 2. Chạy các ô từ trên xuống. CPU đủ cho mô hình đầu tiên, không cần bật GPU.
-3. Giữ `USE_DRIVE=False` nếu chưa muốn gắn Drive. Muốn giữ cache/model sau khi Colab ngắt, đổi sang `True` và tự xác nhận màn hình cấp quyền của Google.
+3. `USE_DRIVE=True` là mặc định. Xác nhận Google khi được hỏi; cache, model, ảnh và dashboard tự lưu vào `MyDrive/PitchOps/workspace`. Dữ liệu từ runtime cũ được chuyển kèm kiểm tra hash.
 4. Chạy pipeline rồi mở dashboard ngay trong output. Kết quả có thể xuất JSON/CSV hoặc tải HTML để mở ngoại tuyến.
 5. Chạy ô kiểm thử. Ô MLflow và dữ liệu cầu thủ là tùy chọn, không cần tài khoản trả phí.
 
 Mọi lệnh cài đặt, kiểm thử, tải dữ liệu và huấn luyện trong hướng dẫn đều chạy trên Colab của bạn. GitHub lưu code và notebook; dữ liệu thô, API key, model và output riêng không được commit.
+
+Bản v0.2 thêm **lưu Drive mặc định, chuyển checkpoint có kiểm tra hash, logo giải/đội, miniface, tìm cầu thủ, lọc đội/vị trí và hồ sơ nguồn**. [Cách lưu và đồng bộ ảnh](docs/MEDIA_AND_DRIVE.md).
 
 ## Phạm vi đã triển khai
 
@@ -26,7 +28,7 @@ Mọi lệnh cài đặt, kiểm thử, tải dữ liệu và huấn luyện tro
 | So sánh với baseline | Đã có | Chọn bằng validation log loss, đánh giá lại trên phần test phía sau |
 | Cuộc đua vô địch quốc nội | Kịch bản | 5.000 Monte Carlo, điểm/hiệu số/bàn thắng, kiểm tra đủ thành viên |
 | Khả năng top 4, nhóm 3 cuối, khoảng điểm | Kịch bản | Chỉ là nhóm thứ hạng, chưa áp dụng mọi luật suất dự cúp/xuống hạng |
-| Dashboard | Đã có | HTML tự chứa, lọc giải, đổi 2 đội/sân nhà, lưới tỉ số, bảng đua, MLOps panel |
+| Dashboard | Đã có | HTML có snapshot/ảnh nhúng, logo giải/đội, miniface, tìm/lọc cầu thủ, hồ sơ nguồn, lưới tỉ số, bảng đua, MLOps panel |
 | Scorer projection | Mô-đun tùy chọn | Empirical Bayes Poisson từ log cầu thủ; cần phút dự kiến trước trận |
 | XI tuần/tháng/năm | Thống kê lịch sử tùy chọn | Có rating/vị trí thì chọn 4-3-3 theo phong độ; chưa là dự báo giải thưởng |
 | Heatmap | Adapter tùy chọn | Lấy vị trí sự kiện StatsBomb; chưa là heatmap tracking/dự báo |

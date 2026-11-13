@@ -42,6 +42,9 @@ def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=50
         commit = "uncommitted"
     metadata = {"run_id": run_id, "created_at": datetime.now(timezone.utc).isoformat(), "data_sha256": data_hash, "code_commit": commit, "python": platform.python_version(), "sklearn": sklearn.__version__, "numpy": np.__version__, "pandas": pd.__version__, "training_from": str(matches.date.min().date()), "training_through": str(matches.date.max().date()), "forecast_date": str(forecast_date.date()), "seed": 42, "source": "football-data.co.uk", "source_manifests": manifests, "matches": len(matches), "features": len(features), "calibration": "Reliability measured on test; no post-hoc calibration fitted; Poisson independence assumption", "status": "research"}
     payload = {"meta": metadata, "metrics": report, "leagues": {}}
+    media_path = root/'data'/'media'/'catalog.json'
+    if media_path.exists():
+        payload['media'] = json.loads(media_path.read_text(encoding='utf-8'))
     print("4/6 Forecasting all within-league home-away combinations", flush=True)
     for league in sorted(matches.league.unique()):
         season = sorted(matches[matches.league == league].season.unique())[-1]

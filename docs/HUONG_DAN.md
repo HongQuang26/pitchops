@@ -6,7 +6,7 @@ Mở [PitchOps_Colab.ipynb](https://colab.research.google.com/github/HongQuang26
 
 Ô setup clone repository về `/content/pitchops`. Đây là code đang chỉnh sửa, khác `/content/pitchops_workspace` là cache và output. Bạn có thể mở thư mục code từ thanh Tệp của Colab hoặc dùng `%%writefile` trong một ô để sửa một module. Notebook được lưu trong Drive, còn `/content` sẽ mất khi runtime bị thu hồi.
 
-`USE_DRIVE=True` sẽ yêu cầu bạn tự xác nhận Google Drive. Workspace được lưu tại `/content/drive/MyDrive/PitchOps/workspace`. Cache/ledger phải được giữ giữa các phiên để tôn trọng quota. Nếu không gắn Drive, hãy tải backup trước khi đóng runtime và khôi phục backup trước khi tải dữ liệu lại. Không chạy nhiều notebook đồng thời trên cùng workspace; cache hiện tại dành cho một pipeline writer.
+`USE_DRIVE=True` đã được bật mặc định; Google có thể yêu cầu bạn tự xác nhận quyền Drive. Workspace được lưu tại `/content/drive/MyDrive/PitchOps/workspace`. Cache/ledger phải được giữ giữa các phiên để tôn trọng quota. Nếu không gắn Drive, hãy tải backup trước khi đóng runtime và khôi phục backup trước khi tải dữ liệu lại. Không chạy nhiều notebook đồng thời trên cùng workspace; cache hiện tại dành cho một pipeline writer.
 
 ## Chạy pipeline
 
