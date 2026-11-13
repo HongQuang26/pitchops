@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from pitchops.storage import migrate_workspace, latest_run, verify_persistence
 from pitchops.media import resolve_team, safe_image_url, logo_from_index, player_record
+from pitchops.media import is_player_position
 from pitchops.data import atomic_json
 
 def test_migration_rebases_latest_and_is_idempotent(tmp_path):
@@ -76,3 +77,12 @@ def test_media_refresh_does_not_rewrite_model_snapshot(tmp_path,monkeypatch):
     assert latest_run(tmp_path)[1]==model_dir
     assert latest_dashboard(tmp_path)[1]==view_dir
     assert payload['meta']['model_run_directory']==str(model_dir)
+
+@pytest.mark.parametrize('position',['Manager','Assistant Manager','Goalkeeping Coach','Technical Director','Physiotherapist'])
+def test_support_staff_are_not_player_cards(position):
+    assert not is_player_position(position)
+
+def test_verified_club_aliases_match_secondary_logo_filenames():
+    index=[{'path':'logos/Germany - Bundesliga/VfB Stuttgart.png','type':'blob'},{'path':'logos/Spain - LaLiga/CA Osasuna.png','type':'blob'}]
+    assert logo_from_index('Stuttgart',index).endswith('VfB Stuttgart.png')
+    assert logo_from_index('Osasuna',index).endswith('CA Osasuna.png')
