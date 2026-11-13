@@ -22,7 +22,7 @@ def event(kind,team='A',pid=10,period=1,minute=0,**extra):
 
 def test_regulation_parser_separates_extra_time_shootout_and_sub_minutes():
     lineup=[{'player':{'id':10,'name':'P10'},'position':{'name':'Center Forward'},'jersey_number':9}]
-    events=[event('Starting XI',tactics={'lineup':lineup}),event('Shot',shot={'outcome':{'name':'Goal'},'statsbomb_xg':.4},location=[120,80]),event('Pass',**{'pass':{'type':{'name':'Throw-in'}},'duration':2}),event('Substitution',period=2,minute=60,substitution={'replacement':{'id':11,'name':'P11'}}),event('Shot',pid=11,period=3,minute=100,shot={'outcome':{'name':'Goal'}}),event('Shot',pid=11,period=5,minute=120,shot={'outcome':{'name':'Goal'}})]
+    events=[event('Starting XI',tactics={'lineup':lineup}),event('Shot',shot={'outcome':{'name':'Goal'},'statsbomb_xg':.4},location=[120,80]),event('Pass',**{'pass':{'type':{'name':'Throw-in'}},'duration':2,'location':[5,20]}),event('Substitution',period=2,minute=60,substitution={'replacement':{'id':11,'name':'P11'}}),event('Shot',pid=11,period=3,minute=100,shot={'outcome':{'name':'Goal'}}),event('Shot',pid=11,period=5,minute=120,shot={'outcome':{'name':'Goal'}})]
     game,players,maps=parse_match(match_fixture(),events)
     assert game['hg']==1 and game['ag']==0 and game['winner']=='A'
     assert game['home_throwins']==1
@@ -34,6 +34,12 @@ def test_regulation_parser_separates_extra_time_shootout_and_sub_minutes():
 def test_own_goal_is_counted_once_for_opponent():
     game,_,_=parse_match(match_fixture(),[event('Own Goal Against','B'),event('Own Goal For','A')])
     assert game['hg']==1 and game['ag']==0
+
+def test_substitute_uses_own_event_position_instead_of_outgoing_player():
+    events=[event('Substitution',pid=10,period=2,minute=60,position={'name':'Center Forward'},substitution={'replacement':{'id':11,'name':'P11'}}),event('Pass',pid=11,period=2,minute=61,position={'name':'Right Back'})]
+    _,players,_=parse_match(match_fixture(),events)
+    incoming=next(p for p in players if p['provider_id']==11)
+    assert incoming['position']=='DF' and incoming['minutes']==30
 
 @pytest.mark.parametrize('point,expected',[([120,80],95),([0,0],0),([-1,10],None),([121,40],None),(None,None)])
 def test_spatial_coordinate_bounds(point,expected):assert grid_index(point)==expected
@@ -115,3 +121,14 @@ def test_import_rejects_unnamespaced_player_identity(tmp_path):
     path=tmp_path/'players.csv'
     pd.DataFrame([{'player_id':'123','player':'A','team':'T','date':'2026-01-01','minutes':90,'goals':0,'rating':6.5,'rating_source':'vendor','position':'FW'}]).to_csv(path,index=False)
     with pytest.raises(ValueError,match='namespaced'):import_player_logs(path)
+
+def test_scorer_backtest_excludes_future_logs_and_covers_candidate_set():
+    from pitchops.advanced_models import scorer_backtest
+    games=pd.DataFrame([{'match_id':1,'date':pd.Timestamp('2022-01-01'),'home':'A','away':'B'},{'match_id':2,'date':pd.Timestamp('2022-01-02'),'home':'A','away':'C'}])
+    logs=pd.DataFrame([{'match_id':1,'date':pd.Timestamp('2022-01-01'),'team':'A','player_id':'s:1','position':'FW','minutes':90,'goals':0,'xg':.3,'rating':6},{'match_id':2,'date':pd.Timestamp('2022-01-02'),'team':'A','player_id':'s:1','position':'FW','minutes':90,'goals':1,'xg':.5,'rating':7}])
+    prediction=[{'match_index':1,'team':'A','mu':1.2}]
+    before=scorer_backtest(logs,games,prediction)
+    future={**logs.iloc[-1].to_dict(),'match_id':3,'date':pd.Timestamp('2023-01-01'),'goals':99}
+    after=scorer_backtest(pd.concat([logs,pd.DataFrame([future])]),games,prediction)
+    assert before==after and before['test_player_candidates']==1 and before['actual_appearance_coverage']==1
+    assert before['goal_count_nll']>0 and before['appearance_brier']>0

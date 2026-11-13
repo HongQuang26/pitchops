@@ -18,6 +18,8 @@ Mọi lệnh cài đặt, kiểm thử, tải dữ liệu và huấn luyện tro
 
 Bản v0.2 thêm **lưu Drive mặc định, chuyển checkpoint có kiểm tra hash, logo 5 giải và 96/96 đội, danh mục 112 cầu thủ với 97 ảnh nguồn, tìm/lọc cầu thủ và hồ sơ có credit**. Đã kiểm tra mở lại dashboard từ Drive trong phiên Colab mới. [Cách lưu và đồng bộ ảnh](docs/MEDIA_AND_DRIVE.md).
 
+Bản **v0.3 / Event Lab** bổ sung pipeline sự kiện StatsBomb World Cup 2022: ném biên/control proxy, goal-share từng cầu thủ, PI và ứng viên MOTM-index, heatmap Bayesian, XI theo lịch biết trước, engine cúp, journal live/replay và adapter dữ liệu có key tùy chọn. Đây là **replay lịch sử riêng**, không phải các chức năng đã có live coverage cho mọi CLB. [Cách chạy, định nghĩa và giới hạn](docs/EVENT_RESEARCH.md).
+
 ## Phạm vi đã triển khai
 
 | Chức năng | Trạng thái | Cách làm |
@@ -29,12 +31,13 @@ Bản v0.2 thêm **lưu Drive mặc định, chuyển checkpoint có kiểm tra 
 | Cuộc đua vô địch quốc nội | Kịch bản | 5.000 Monte Carlo, điểm/hiệu số/bàn thắng, kiểm tra đủ thành viên |
 | Khả năng top 4, nhóm 3 cuối, khoảng điểm | Kịch bản | Chỉ là nhóm thứ hạng, chưa áp dụng mọi luật suất dự cúp/xuống hạng |
 | Dashboard | Đã có | HTML có snapshot/ảnh nhúng, logo giải/đội, miniface, tìm/lọc cầu thủ, hồ sơ nguồn, lưới tỉ số, bảng đua, MLOps panel |
-| Scorer projection | Mô-đun tùy chọn | Empirical Bayes Poisson từ log cầu thủ; cần phút dự kiến trước trận |
-| XI tuần/tháng/năm | Thống kê lịch sử tùy chọn | Có rating/vị trí thì chọn 4-3-3 theo phong độ; chưa là dự báo giải thưởng |
-| Heatmap | Adapter tùy chọn | Lấy vị trí sự kiện StatsBomb; chưa là heatmap tracking/dự báo |
-| Possession, ném biên, điểm cầu thủ, MOTM | Chưa huấn luyện | Cần nhãn được cấp quyền, nhất quán nhà cung cấp, đội hình dự kiến |
-| Cúp quốc tế/vòng loại trực tiếp | Chưa triển khai | Cần engine thể thức, bốc thăm, hai lượt, hiệp phụ/luân lưu |
-| Chạy tự động hằng tuần khi Colab đóng | Chưa triển khai | Colab tương tác không bảo đảm dịch vụ luôn chạy |
+| Dự báo cầu thủ | Event Lab lịch sử | Goal-share xG co rút, xác suất ra sân, phút kỳ vọng, P(≥1)/P(≥2), dự báo PI; xuất CSV |
+| XI tuần/tháng/năm | Event Lab lịch sử | 4–3–3 theo PI kỳ vọng trên lịch biết tại cutoff; không suy rộng cả năm |
+| Heatmap | Event Lab lịch sử | Quan sát + Bayesian next-event location density; kiểm định NLL; không tracking |
+| Ném biên, control proxy, PI, MOTM-index | Event Lab lịch sử | Model + validation/test; proxy và nhãn nghiên cứu được ghi rõ, không giả thành thống kê/giải thưởng chính thức |
+| Cúp quốc tế/vòng loại trực tiếp | Có engine giới hạn | World Cup 2022 groups/bracket + cúp 2ⁿ đội một/hai lượt, ET/penalty, giữ kết quả đã biết |
+| Kiểm tra cập nhật tuần | Khi mở/chạy Colab | Receipt thành công/lỗi lưu Drive; không có worker khi runtime đóng |
+| Nguồn cầu thủ có quyền truy cập | Adapter tùy chọn | API-Football coverage/cache/budget; CSV player logs, ID namespace; chưa nối thẳng vào model mặc định |
 
 ## Các bảo đảm trong code
 
@@ -64,7 +67,13 @@ src/pitchops/simulation.py     Monte Carlo giải vòng tròn hai lượt
 src/pitchops/pipeline.py       Điều phối, artifact lineage, MLflow tùy chọn
 src/pitchops/dashboard.*       Renderer và giao diện tự chứa
 src/pitchops/players.py        Scorer projection và XI lịch sử
-src/pitchops/events.py         StatsBomb Open Data adapter
+src/pitchops/event_data.py     StatsBomb event normalization + manifest
+src/pitchops/advanced_models.py Team/player/spatial models
+src/pitchops/research.py       Event Lab end-to-end pipeline
+src/pitchops/cups.py           Group/knockout tournament engines
+src/pitchops/forecast_store.py Immutable forecast journal + delayed scoring
+src/pitchops/providers.py      Opt-in API/CSV adapters
+src/pitchops/schedule.py       Colab check-on-open receipts
 tests/test_contracts.py        Các bất biến quan trọng
 docs/                         Hướng dẫn, kiến trúc, giới hạn, lộ trình
 ```

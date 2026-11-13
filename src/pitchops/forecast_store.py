@@ -29,10 +29,11 @@ def record_forecasts(root,records):
         atomic_json(path,record);written+=1
     return written
 
-def evaluate_forecasts(root,results):
+def evaluate_forecasts(root,results,model_run_id=None):
     results={str(r['fixture_id']):r for r in results};groups={'live':[],'replay':[]};pending=0;rejected=0
     for path in (Path(root)/'forecasts').glob('*.json'):
         forecast=json.loads(path.read_text());result=results.get(str(forecast['fixture_id']))
+        if model_run_id is not None and forecast.get('model_run_id')!=model_run_id:continue
         if not result or not result.get('finished'):pending+=1;continue
         cutoff=utc_naive(forecast['as_of']);kickoff=utc_naive(result['kickoff'])
         if cutoff>=kickoff:rejected+=1;continue

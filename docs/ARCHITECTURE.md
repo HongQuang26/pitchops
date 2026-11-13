@@ -43,3 +43,7 @@ flowchart TD
 5. **Vận hành production:** scheduler ổn định, provider API key trong secret manager, kho object immutable, registry champion/challenger qua nhiều run, promotion/rollback, prediction log + delayed outcome join + drift alerts, API authentication và dashboard hosting riêng.
 
 Chưa tự động chạy theo tuần trong khi Colab đóng. Không tự tạo GitHub Actions training vì yêu cầu hiện tại là chạy trên Colab. Có thể commit/push code từ notebook bằng token người dùng tự cấp trong Colab Secrets, hoặc dùng GitHub UI; không cần chia sẻ token qua chat.
+
+## Event Lab v0.3
+
+Đã bổ sung nhánh event → player logs / spatial counts → temporal team/PI models → goal-share/MOTM-index / Bayesian density / XI / group-to-knockout simulation → forecast journal → derived dashboard view. Cùng workspace Drive, domain độc lập với CLB. [Hợp đồng và cách chạy](EVENT_RESEARCH.md) là mô tả hiện tại; các mục ở lộ trình bên trên còn áp dụng cho mở rộng production, dữ liệu thương mại và coverage live.

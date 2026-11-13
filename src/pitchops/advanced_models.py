@@ -45,7 +45,9 @@ def fit_team_models(games):
         if target=='control':test_pred=np.clip(test_pred,.05,.95)
         report['targets'][target]={'selected':'regularized model' if use_model else 'mean baseline','test_n':len(test),'test_mae':float(mean_absolute_error(test[target],test_pred)),'baseline_mae':float(mean_absolute_error(test[target],np.full(len(test),float(before_test[target].mean()))))}
         models[target]={'model':regressor(target).fit(frame[FEATURES],frame[target]),'selected':use_model,'baseline':float(frame[target].mean())}
-        if target=='goals':report['outcomes']=evaluate(test,np.maximum(test_pred,.01))
+        if target=='goals':
+            report['outcomes']=evaluate(test,np.maximum(test_pred,.01))
+            report['test_goal_predictions']=[{'match_index':int(row.match_id),'team':row.team,'mu':float(mu)} for row,mu in zip(test.itertuples(),test_pred)]
     report['proxy_definition']='Control = share of duration of observed Pass/Carry/Dribble actions, not official possession or ball-in-play tracking.'
     return models,state,report,frame
 
@@ -136,6 +138,37 @@ def motm_probabilities(players,seed=42,samples=2500,rating_sigma=.35):
     wins=np.bincount(ratings[valid].argmax(axis=1),minlength=len(players)) if valid.any() else np.zeros(len(players))
     denom=max(1,int(valid.sum()))
     return [{'id':p['id'],'name':p['name'],'team':p['team'],'probability':float(wins[i]/denom)} for i,p in enumerate(players)]
+
+def scorer_backtest(logs,games,test_predictions):
+    """Heldout team means + player history strictly before each test date.
+
+    Evaluate the recent-player candidate set, including non-appearances; report
+    actual-player coverage separately. No final-refit team model is used here.
+    """
+    rows=[];covered=0;actual_total=0
+    for prediction in test_predictions:
+        game=games.loc[prediction['match_index']];team=prediction['team'];date=game.date
+        history=logs[(logs.team==team)&(logs.date<date)]
+        recent=games[(games.date<date)&((games.home==team)|(games.away==team))].tail(5)
+        cohort=history[history.match_id.isin(recent.match_id)]
+        candidates=[]
+        for pid,group in cohort.groupby('player_id'):
+            values=past_player(group.to_dict('records'));latest=group.iloc[-1]
+            appearance=(group.match_id.nunique()+1)/(len(recent)+2)
+            minutes=appearance*float(group.minutes.mean())
+            weight=max(values['past_xg90'],.015)*minutes/90
+            if latest.position=='GK':weight=.0001*minutes/90
+            candidates.append((pid,appearance,weight))
+        total=sum(p[2] for p in candidates)
+        actual=logs[(logs.match_id==game.match_id)&(logs.team==team)]
+        labels={r.player_id:int(r.goals) for r in actual.itertuples()}
+        covered+=sum(pid in {p[0] for p in candidates} for pid in labels);actual_total+=len(labels)
+        for pid,appearance,weight in candidates:
+            mu=.9*prediction['mu']*weight/max(total,1e-12);conditional=mu/appearance;goals=labels.get(pid,0)
+            pscore=appearance*(1-np.exp(-conditional))
+            probability=(1-appearance)+appearance*np.exp(-conditional) if goals==0 else appearance*poisson.pmf(goals,conditional)
+            rows.append({'mae':abs(goals-mu),'nll':-np.log(max(probability,1e-12)),'score_brier':(pscore-int(goals>0))**2,'appearance_brier':(appearance-int(pid in labels))**2,'score_probability':pscore,'scored':int(goals>0)})
+    return {'test_player_candidates':len(rows),'actual_appearance_coverage':covered/max(actual_total,1),'goal_count_mae':float(np.mean([r['mae'] for r in rows])) if rows else None,'goal_count_nll':float(np.mean([r['nll'] for r in rows])) if rows else None,'scorer_brier':float(np.mean([r['score_brier'] for r in rows])) if rows else None,'appearance_brier':float(np.mean([r['appearance_brier'] for r in rows])) if rows else None,'mean_score_probability':float(np.mean([r['score_probability'] for r in rows])) if rows else None,'observed_score_rate':float(np.mean([r['scored'] for r in rows])) if rows else None,'definition':'Test recent-player candidate set, including non-appearances; team means from pre-test fit, updated historical features only; unseen entrants excluded and coverage reported. No calibration fitted.'}
 
 def spatial_model(locations,logs,as_of):
     cutoff=pd.Timestamp(as_of);positions=dict(zip(logs.player_id,logs.position))

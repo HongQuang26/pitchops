@@ -21,3 +21,9 @@ Bronze: response gốc, SHA256, thời gian truy xuất, request ledger. Silver:
 Chỉ trận có `date < as_of` được đưa vào training/feature. Nguồn workbook có thể sửa hồi tố: backtest từ file tải hôm nay không tái hiện hoàn hảo dữ liệu từng tồn tại tại thời điểm lịch sử. Cần archived snapshots theo thời điểm phát hành để có backtest point-in-time đầy đủ. Snapshot này ghi thời gian lấy dữ liệu và checksum nhưng chưa có kho lịch sử theo publication-time.
 
 Giờ trận không được dùng trong bản đầu; tất cả trận cùng ngày bị loại khỏi feature của nhau để bảo thủ. Đội hình chính thức công bố sát trận không được dùng khi dự báo một tuần trước trận. Phút thi đấu thực tế của trận mục tiêu không được dùng cho scorer projection.
+
+## Nguồn bổ sung trong v0.3
+
+World Cup 2022 được chọn từ metadata thật của StatsBomb (43/106), 64 trận. Dashboard hiển thị credit và logo StatsBomb lấy từ [kho ảnh công khai chính thức](https://github.com/hudl/public-images). Không commit sự kiện, ảnh hoặc model vào repository này.
+
+[API-Football documentation](https://www.api-football.com/documentation-v3) là hợp đồng của adapter tùy chọn. Coverage khác nhau theo giải/mùa/gói; chưa cung cấp key hoặc mua gói. Không mặc định nguồn có throw-ins, tracking hay official MOTM. Dữ liệu trả về cần canonical mapping/normalization trước khi dùng trong model.

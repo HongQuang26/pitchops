@@ -49,3 +49,7 @@ StatsBomb adapter có `competitions()`, `matches(competition_id,season_id)` và 
 ## Cập nhật tuần sau
 
 Mở lại notebook, nối runtime, restore cùng workspace/cache, kéo code nếu cần rồi chạy pipeline. Snapshot mới có run ID mới; snapshot cũ giữ nguyên. Tự chạy không cần mở Colab sẽ cần môi trường scheduler riêng, chưa cấu hình ở bản này. Không có phiên huấn luyện chạy nền sau khi Colab đã tắt.
+
+## Event Lab v0.3
+
+Phần Event Research mới trong notebook chạy trọn nhánh StatsBomb World Cup 2022 (cutoff 15/12/2022). Mở dashboard → Event Lab để chọn đội, xem bảng ghi bàn/PI/MOTM-index, đổi heatmap, xem XI và mô phỏng cúp. Lần sau giữ `TRAIN_EVENT_RESEARCH=False` để mở lại từ Drive. [Hướng dẫn chi tiết và định nghĩa nhãn](EVENT_RESEARCH.md). Hai hàm scorer/XI nhập CSV ở mục trên vẫn là tiện ích thống kê độc lập, không thay thế pipeline mới.

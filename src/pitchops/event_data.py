@@ -3,7 +3,7 @@
 Possession is an explicitly named controlled-action-duration proxy. Player
 ratings are a transparent PitchOps index, not ratings supplied by StatsBomb.
 """
-from collections import defaultdict
+from collections import defaultdict,Counter
 import hashlib
 import json
 from pathlib import Path
@@ -50,7 +50,7 @@ def parse_match(match,events):
     mid=int(match['match_id']);date=pd.Timestamp(match['match_date'])
     home=match['home_team']['home_team_name'];away=match['away_team']['away_team_name']
     teams={int(match['home_team']['home_team_id']):home,int(match['away_team']['away_team_id']):away}
-    players={};stats={name:defaultdict(float) for name in [home,away]};spatial=defaultdict(lambda:np.zeros(96,dtype=int))
+    players={};stats={name:defaultdict(float) for name in [home,away]};spatial=defaultdict(lambda:np.zeros(96,dtype=int));positions=defaultdict(Counter)
     def ensure(pid,name,team,position='Unknown',number=None,start=0):
         key=int(pid)
         if key not in players:
@@ -72,12 +72,15 @@ def parse_match(match,events):
         if period>2:continue
         if person:
             row=ensure(person['id'],person['name'],team,event.get('position',{}).get('name','Unknown'),start=0)
+            position=event.get('position',{}).get('name')
+            if position:positions[int(person['id'])][position]+=1
         if kind=='Substitution':
             moment=minute90(event)
             if row:row['end']=min(row['end'],moment)
             replacement=event.get('substitution',{}).get('replacement')
             if replacement:
-                new=ensure(replacement['id'],replacement['name'],team,row['position_name'] if row else 'Unknown',start=moment)
+                # Incoming player need not share the outgoing player's position.
+                new=ensure(replacement['id'],replacement['name'],team,'Unknown',start=moment)
                 new['start']=moment
         if kind=='Shot':
             shot=event.get('shot',{});goal=shot.get('outcome',{}).get('name')=='Goal'
@@ -110,6 +113,10 @@ def parse_match(match,events):
     total=stats[home]['control_duration']+stats[away]['control_duration']
     records=[]
     for row in players.values():
+        evidence=positions[row['provider_id']]
+        if evidence:
+            row['position_name']=evidence.most_common(1)[0][0]
+            row['position']=position_group(row['position_name'])
         row.update({'match_id':mid,'date':date,'opponent':away if row['team']==home else home,'is_home':int(row['team']==home),'minutes':max(0,min(row.pop('end')-row.pop('start'),90))})
         if row['minutes']<=0:continue
         row['rating']=pitchops_rating(row);records.append(row)
@@ -133,6 +140,12 @@ def load_event_dataset(root,competition_id=43,season_id=106,max_matches=80):
     for index,match in enumerate(matches.to_dict('records')):
         events=provider._json('events/'+str(match['match_id']))
         game,logs,spatial=parse_match(match,events)
+        # Fail rather than quietly train on a misinterpreted source convention.
+        has_extra=any(int(e.get('period',1)) in {3,4} for e in events)
+        if not has_extra and (game['hg']!=match['home_score'] or game['ag']!=match['away_score']):
+            raise ValueError('Regulation score/source mismatch in match '+str(match['match_id']))
+        if game['stage']!='Group Stage' and game['winner'] not in {game['home'],game['away']}:
+            raise ValueError('Missing knockout winner in match '+str(match['match_id']))
         games.append(game);players.extend(logs);locations.extend(spatial)
         manifest.append({'match_id':int(match['match_id']),'event_count':len(events),'sha256':hashlib.sha256(json.dumps(events,sort_keys=True,separators=(',',':')).encode()).hexdigest()})
         if index%8==0:print(f'Normalized events {index+1}/{len(matches)}',flush=True)
