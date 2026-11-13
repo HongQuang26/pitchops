@@ -4,6 +4,8 @@
 
 [Mở notebook trên Colab](https://colab.research.google.com/github/HongQuang26/pitchops/blob/main/notebooks/PitchOps_Colab.ipynb) · [Hướng dẫn chi tiết](docs/HUONG_DAN.md) · [Kiến trúc và lộ trình](docs/ARCHITECTURE.md) · [Nguồn và quyền sử dụng](docs/DATA_SOURCES.md)
 
+Đã chạy trên Colab với **2.252 trận**, **12 kiểm thử đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
+
 ## Chạy lần đầu
 
 1. Mở notebook trên Colab, chọn **Sao chép vào Drive** để lưu bản của bạn.
