@@ -83,3 +83,34 @@ def test_shared_guard_refuses_third_attempt_before_http(monkeypatch):
     remote=GitHubState('test-token');now=__import__('time').time()
     monkeypatch.setattr(remote,'read',lambda:{'provider_attempts':[{'time':now,'url':'https://www.football-data.co.uk/a'},{'time':now,'url':'https://www.football-data.co.uk/b'}]})
     with pytest.raises(RuntimeError,match='budget'):remote.reserve('https://www.football-data.co.uk/mmz4281/c.xlsx')
+
+def test_failed_render_never_promotes_partial_model_run(tmp_path,monkeypatch):
+    import pandas as pd
+    import pitchops.pipeline as pipeline
+    import pitchops.dashboard as dashboard
+    previous={'run_id':'old','snapshot':'old/snapshot.json'}
+    atomic_json(tmp_path/'artifacts'/'latest.json',previous)
+    records=[{'league':'E0','season':'2627','date':pd.Timestamp('2026-01-01')+pd.Timedelta(days=i),'home':'A','away':'B','hg':1,'ag':0,'hc':4,'ac':3,'hs':8,'as':6} for i in range(60)]
+    monkeypatch.setattr(pipeline,'load_seasons',lambda *a,**kw:(pd.DataFrame(records),[]))
+    models={'goals':None,'corners':None,'shots':None,'selected':'baseline','baseline':{'global':1.3,'rates':{}}}
+    report={'selected':'baseline','test':{'log_loss':1.0},'test_baseline':{'log_loss':1.0}}
+    monkeypatch.setattr(pipeline,'train_and_evaluate',lambda frame:(models,report))
+    def fail(*args):raise OSError('simulated render failure')
+    monkeypatch.setattr(dashboard,'render_dashboard',fail)
+    with pytest.raises(OSError,match='render failure'):pipeline.run(tmp_path,simulations=1)
+    assert json.loads((tmp_path/'artifacts'/'latest.json').read_text())==previous
+
+
+def test_failed_deployment_gate_restores_previous_champion(tmp_path,keys,monkeypatch):
+    import pitchops.pipeline as pipeline
+    from pitchops.weekly import train_weekly
+    private,public=keys
+    previous={'run_id':'champion'};atomic_json(tmp_path/'artifacts'/'latest.json',previous)
+    config={'history_seasons':2,'leagues':['E0'],'simulations':1,'automatic_retries':1,'minimum_test_matches':100,'maximum_test_log_loss_ratio':1.05,'maximum_in_season_match_age_days':21}
+    def run(*args,**kwargs):
+        atomic_json(tmp_path/'artifacts'/'latest.json',{'run_id':'candidate'})
+        return {'meta':{'run_id':'candidate','code_commit':'a'*40,'training_through':'2026-11-01','matches':10},'metrics':{'selected':'baseline','test':{'matches':3,'log_loss':2.0,'brier':.8,'goals_mae':1},'test_baseline':{'log_loss':1.0}},'quality':{},'leagues':{}},tmp_path
+    monkeypatch.setattr(pipeline,'run',run)
+    with pytest.raises(ValueError,match='quality gate'):train_weekly(tmp_path,config,public)
+    assert json.loads((tmp_path/'artifacts'/'latest.json').read_text())==previous
+    assert (tmp_path/'weekly_failure.json').exists()

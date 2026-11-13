@@ -27,7 +27,7 @@ jobs:
     env:
       OPENBLAS_NUM_THREADS: '1'
       OMP_NUM_THREADS: '1'
-      PITCHOPS_ROOT: ${{ runner.temp }}/pitchops_weekly
+      PITCHOPS_ROOT: /tmp/pitchops_weekly
       PITCHOPS_MODE: ${{ inputs.mode || 'train' }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -58,8 +58,8 @@ jobs:
         with:
           name: weekly-receipt-${{ github.run_id }}
           path: |
-            ${{ runner.temp }}/pitchops_weekly/weekly_report.json
-            ${{ runner.temp }}/pitchops_weekly/weekly_receipt.json
-            ${{ runner.temp }}/pitchops_weekly/weekly_failure.json
+            /tmp/pitchops_weekly/weekly_report.json
+            /tmp/pitchops_weekly/weekly_receipt.json
+            /tmp/pitchops_weekly/weekly_failure.json
           if-no-files-found: ignore
           retention-days: 30
