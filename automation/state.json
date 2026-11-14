@@ -16,5 +16,10 @@
     "run_id": "20261113T063801Z-b519b17d2a",
     "origin": "verified Colab training"
   },
-  "promoted_model": null
+  "promoted_model": null,
+  "verification": {
+    "status": "passed",
+    "at": "2026-11-14T06:01:04.944920+00:00",
+    "workflow_run_id": "43564205103"
+  }
 }
