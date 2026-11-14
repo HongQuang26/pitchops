@@ -2,11 +2,11 @@
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const finite = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
-const num = value => finite(value) ? Number(value).toFixed(2) : '—';
+const num = (value, digits = 2) => finite(value) ? Number(value).toFixed(digits) : '—';
 const pct = value => finite(value) ? (100 * Number(value)).toFixed(1) + '%' : '—';
 const normalize = value => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();
 const clamp = value => finite(value) ? Math.max(0, Math.min(1, Number(value))) : 0;
-const MEDIA = {leagues:{}, teams:{}, players:[], coverage:{}, ...(DATA.media || {})};
+const MEDIA = {...(DATA.media || {}), leagues:DATA.media?.leagues || {}, teams:DATA.media?.teams || {}, players:Array.isArray(DATA.media?.players) ? DATA.media.players : [], coverage:DATA.media?.coverage || {}};
 const leagues = DATA.leagues || {};
 const leagueSelect = $('league');
 let page = 'overview', playerLimit = 24, playerLeague = null, searchTimer;
@@ -41,7 +41,7 @@ function download(name, content, type) {
 function csvCell(value) {
   let text = String(value ?? '');
   // Keep spreadsheet applications from interpreting source-supplied names as formulas.
-  if (/^[\s]*[=+@-]/.test(text)) text = "'" + text;
+  if (typeof value === 'string' && /^[\s]*[=+@-]/.test(text)) text = "'" + text;
   return '"' + text.replaceAll('"','""') + '"';
 }
 function current() { return leagues[leagueSelect.value]; }
@@ -89,7 +89,7 @@ function renderOverview() {
   const kpis = [
     ['TRẬN ĐÃ HỌC', Number(m.matches || 0).toLocaleString('vi-VN'), 'Dữ liệu trận đấu đã quan sát'],
     ['ĐỘI TRONG GIẢI', (l.teams || []).length, `${l.matches || 0} trận ở mùa đang chọn`],
-    ['TEST LOG LOSS', num(report.test?.log_loss), `Baseline ${num(report.test_baseline?.log_loss)} · ${report.test?.matches || 0} trận test`],
+    ['TEST LOG LOSS', num(report.test?.log_loss,4), `Baseline ${num(report.test_baseline?.log_loss,4)} · ${report.test?.matches || 0} trận test`],
     ['LƯỢT MÔ PHỎNG', Number(l.race?.simulations || 0).toLocaleString('vi-VN'), 'Kịch bản mùa giải · seed 42']
   ];
   $('kpis').innerHTML = kpis.map(([label,value,note]) => `<div class="kpi"><div class="kpi-label">${esc(label)}</div><strong>${esc(value)}</strong><small>${esc(note)}</small></div>`).join('');
@@ -188,7 +188,7 @@ function renderActive() {
 }
 function routeHash() {
   const params = new URLSearchParams({page,league:leagueSelect.value});
-  if (page === 'match') { params.set('home',$('home').value); params.set('away',$('away').value); }
+  if (page !== 'expert' && $('home').value && $('away').value) { params.set('home',$('home').value); params.set('away',$('away').value); }
   return '#' + params.toString();
 }
 function saveRoute(push = false) {

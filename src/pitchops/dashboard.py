@@ -1,6 +1,7 @@
 """Snapshot HTML with embedded cached artwork and optional remote image fallbacks."""
 import json
 import re
+import hashlib
 from pathlib import Path
 
 def render_dashboard(payload, output):
@@ -29,11 +30,16 @@ def refresh_dashboard(root):
     payload, previous = latest_dashboard(root)
     meta = payload['meta']
     model_id = meta['run_id']
+    assets_hash = hashlib.sha256(b''.join(Path(__file__).with_name(name).read_bytes()
+        for name in ('dashboard.html','dashboard.css','dashboard.js','analytics.js'))).hexdigest()
+    if meta.get('ui_assets_sha256') == assets_hash and (previous/'dashboard.html').is_file():
+        return payload, previous
     try:
         commit = subprocess.check_output(['git','rev-parse','HEAD'], text=True, stderr=subprocess.DEVNULL).strip()
     except (OSError, subprocess.CalledProcessError):
         commit = 'uncommitted'
-    meta.update(view_code_commit=commit, ui_version='0.5', ui_refreshed_at=datetime.now(timezone.utc).isoformat())
+    meta.update(view_code_commit=commit, ui_version='0.5', ui_assets_sha256=assets_hash,
+                ui_refreshed_at=datetime.now(timezone.utc).isoformat())
     view_id = model_id + '-ui-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     view = root/'artifacts'/'views'/view_id
     view.mkdir(parents=True, exist_ok=False)

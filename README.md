@@ -8,6 +8,10 @@
 
 Event Lab đã chạy thêm **62 trận trước cutoff / 1.890 lượt cầu thủ**, PI test MAE **0,2496** so với baseline **0,3268**, spatial NLL **4,0408** so với uniform **4,5643**. Các kết quả này thuộc cohort lịch sử nhỏ, không gộp vào test CLB.
 
+## Giao diện v0.5
+
+Dashboard mới có bố cục sân cỏ, SVG điều hướng, logo/miniface, nhãn dễ đọc, nút 44 px, tìm/sắp xếp bảng đua, tìm cầu thủ không dấu và tabs bàn phím. Event Lab hiển thị đúng cutoff lịch sử riêng. Mở ô dashboard tự nhận giao diện mới từ dữ liệu Drive, không cào hoặc train lại; view được tái dùng khi UI không đổi. [Thiết kế và hành vi](docs/UI_DESIGN.md).
+
 ## CI/CD v0.4
 
 [CI](https://github.com/HongQuang26/pitchops/actions/workflows/ci.yml) chạy khi push/PR. [Weekly MLOps](https://github.com/HongQuang26/pitchops/actions/workflows/weekly.yml) tự thu thập hai bulk workbook, train và kiểm định mỗi **thứ Sáu 14:23 giờ Việt Nam**; thứ Bảy kiểm tra phục hồi. Quality gate thất bại giữ model cũ. Chỉ bundle mã hóa được phát hành; private key giữ trên Drive, không cần Google token trong GitHub. [Hướng dẫn vận hành](docs/CICD.md).

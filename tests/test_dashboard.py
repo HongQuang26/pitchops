@@ -65,3 +65,12 @@ def test_failed_ui_render_does_not_promote_partial_view(tmp_path, monkeypatch):
         refresh_dashboard(tmp_path)
     assert not (tmp_path/'artifacts'/'latest_view.json').exists()
     assert latest_dashboard(tmp_path)[1] == model
+
+
+def test_reopening_same_ui_reuses_view_instead_of_duplicating_drive_data(tmp_path):
+    saved_snapshot(tmp_path)
+    first, first_view = refresh_dashboard(tmp_path)
+    second, second_view = refresh_dashboard(tmp_path)
+    assert first_view == second_view
+    assert first == second
+    assert len(list((tmp_path/'artifacts'/'views').iterdir())) == 1
