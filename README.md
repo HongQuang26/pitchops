@@ -1,12 +1,16 @@
 # PitchOps
 
-**Dự án MLOps bóng đá chạy trên Google Colab, có dự đoán xác suất và dashboard phong cách sân cỏ.** Đây là bản khởi tạo có pipeline thật và kiểm định theo thời gian; không phải hệ thống đã phủ mọi cầu thủ, mọi giải hoặc chạy nền 24/7.
+**Dự án MLOps bóng đá với CI/CD GitHub Actions hằng tuần, Colab để thử nghiệm/xem kết quả và dashboard phong cách sân cỏ.** Đây là bản khởi tạo có pipeline thật và kiểm định theo thời gian; không phải hệ thống đã phủ mọi cầu thủ, mọi giải hoặc chạy nền 24/7.
 
 [Mở notebook trên Colab](https://colab.research.google.com/github/HongQuang26/pitchops/blob/main/notebooks/PitchOps_Colab.ipynb) · [Hướng dẫn chi tiết](docs/HUONG_DAN.md) · [Kiến trúc và lộ trình](docs/ARCHITECTURE.md) · [Nguồn và quyền sử dụng](docs/DATA_SOURCES.md)
 
 Đã chạy trên Colab với **2.252 trận**, **51 kiểm thử đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
 
 Event Lab đã chạy thêm **62 trận trước cutoff / 1.890 lượt cầu thủ**, PI test MAE **0,2496** so với baseline **0,3268**, spatial NLL **4,0408** so với uniform **4,5643**. Các kết quả này thuộc cohort lịch sử nhỏ, không gộp vào test CLB.
+
+## CI/CD v0.4
+
+[CI](https://github.com/HongQuang26/pitchops/actions/workflows/ci.yml) chạy khi push/PR. [Weekly MLOps](https://github.com/HongQuang26/pitchops/actions/workflows/weekly.yml) tự thu thập hai bulk workbook, train và kiểm định mỗi **thứ Sáu 14:23 giờ Việt Nam**; thứ Bảy kiểm tra phục hồi. Quality gate thất bại giữ model cũ. Chỉ bundle mã hóa được phát hành; private key giữ trên Drive, không cần Google token trong GitHub. [Hướng dẫn vận hành](docs/CICD.md).
 
 ## Chạy lần đầu
 
@@ -16,7 +20,7 @@ Event Lab đã chạy thêm **62 trận trước cutoff / 1.890 lượt cầu th
 4. Chạy pipeline rồi mở dashboard ngay trong output. Kết quả có thể xuất JSON/CSV hoặc tải HTML để mở ngoại tuyến.
 5. Chạy ô kiểm thử. Ô MLflow và dữ liệu cầu thủ là tùy chọn, không cần tài khoản trả phí.
 
-Mọi lệnh cài đặt, kiểm thử, tải dữ liệu và huấn luyện trong hướng dẫn đều chạy trên Colab của bạn. GitHub lưu code và notebook; dữ liệu thô, API key, model và output riêng không được commit.
+Từ v0.4, CI và job tuần chạy trên GitHub Actions độc lập với Colab. Colab vẫn dùng cùng mã nguồn để thử nghiệm và nhận model đã duyệt. GitHub lưu code và notebook; dữ liệu thô, API key, model và output riêng không được commit.
 
 Bản v0.2 thêm **lưu Drive mặc định, chuyển checkpoint có kiểm tra hash, logo 5 giải và 96/96 đội, danh mục 112 cầu thủ với 97 ảnh nguồn, tìm/lọc cầu thủ và hồ sơ có credit**. Đã kiểm tra mở lại dashboard từ Drive trong phiên Colab mới. [Cách lưu và đồng bộ ảnh](docs/MEDIA_AND_DRIVE.md).
 
@@ -38,7 +42,7 @@ Bản **v0.3 / Event Lab** bổ sung pipeline sự kiện StatsBomb World Cup 20
 | Heatmap | Event Lab lịch sử | Quan sát + Bayesian next-event location density; kiểm định NLL; không tracking |
 | Ném biên, control proxy, PI, MOTM-index | Event Lab lịch sử | Model + validation/test; proxy và nhãn nghiên cứu được ghi rõ, không giả thành thống kê/giải thưởng chính thức |
 | Cúp quốc tế/vòng loại trực tiếp | Có engine giới hạn | World Cup 2022 groups/bracket + cúp 2ⁿ đội một/hai lượt, ET/penalty, giữ kết quả đã biết |
-| Kiểm tra cập nhật tuần | Khi mở/chạy Colab | Receipt thành công/lỗi lưu Drive; không có worker khi runtime đóng |
+| CI/CD hằng tuần | GitHub Actions | Thứ Sáu 14:23 giờ Việt Nam + recovery thứ Bảy; collect/train/gate/encrypted release, Colab nhận kết quả |
 | Nguồn cầu thủ có quyền truy cập | Adapter tùy chọn | API-Football coverage/cache/budget; CSV player logs, ID namespace; chưa nối thẳng vào model mặc định |
 
 ## Các bảo đảm trong code
@@ -84,4 +88,4 @@ docs/                         Hướng dẫn, kiến trúc, giới hạn, lộ t
 
 Không có nguồn miễn phí nào đã được xác minh ở đây cung cấp đầy đủ và cập nhật toàn bộ cầu thủ/thể thức của mọi quốc gia. Mô phỏng giữ cố định sức mạnh đội, suy ra các cặp đấu còn lại từ vòng tròn hai lượt và dùng GD/GF, nên là kịch bản xấp xỉ, đặc biệt với giải dùng đối đầu hoặc playoff. Đội mới hoặc ít dữ liệu sẽ có bất định cao hơn. Một lần test tốt không chứng minh có ích cho mọi mùa hoặc mọi giải; cần backtest nhiều mùa, ablation, calibration riêng và giám sát trước production.
 
-Muốn tự động thu thập và dự đoán hằng tuần hoàn toàn không cần mở Colab: cần thống nhất thêm môi trường chạy nền. Bản khởi tạo ưu tiên đúng yêu cầu Colab; không có cron GitHub giả vờ gọi được phiên Colab đang tắt.
+Thu thập/huấn luyện hằng tuần dùng GitHub Actions; Drive nhận gói model/cache mã hóa khi chạy bước đồng bộ ở Colab. Từ v0.4 đã có GitHub Actions chạy CPU thật theo lịch, không gọi vào phiên Colab đang tắt.

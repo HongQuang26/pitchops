@@ -29,7 +29,6 @@ jobs:
       OMP_NUM_THREADS: '1'
       PITCHOPS_ROOT: /tmp/pitchops_weekly
       PITCHOPS_MODE: ${{ inputs.mode || 'train' }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -47,10 +46,14 @@ jobs:
           python -m pytest -q
       - name: Check recovery schedule
         id: due
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python scripts/check_weekly_due.py
       - name: Collect, train, validate and deliver
         if: steps.due.outputs.run == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python -m pitchops.weekly --root "$PITCHOPS_ROOT" --mode "$PITCHOPS_MODE"
       - name: Publish public receipt only
         if: always()

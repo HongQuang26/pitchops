@@ -58,7 +58,10 @@ def package_run(root,run_id,public_pem,output):
     if model_meta['run_id']!=run_id:raise ValueError('Model identity mismatch')
     file_hashes={};archive=io.BytesIO()
     with tarfile.open(fileobj=archive,mode='w:gz') as tar:
-        for path in sorted(run.rglob('*')):
+        files=[p for p in run.rglob('*') if p.is_file()]
+        cache=root/'data'/'bronze'
+        if cache.exists():files.extend(p for p in cache.iterdir() if p.is_file() and p.suffix in {'.bin','.json'})
+        for path in sorted(files):
             if not path.is_file():continue
             if path.is_symlink():raise ValueError('No symlinks in model archives')
             name=path.relative_to(root).as_posix()
@@ -85,13 +88,14 @@ def unpack_run(plain,destination,expected_run):
             path=PurePosixPath(member.name)
             if member.name in names or path.is_absolute() or '..' in path.parts or not member.isfile():raise ValueError('Unsafe archive member')
             names.add(member.name)
-            if member.name!='bundle_manifest.json' and not member.name.startswith(prefix):raise ValueError('Archive outside expected model run')
+            if member.name!='bundle_manifest.json' and not member.name.startswith(prefix) and not (member.name.startswith('data/bronze/') and len(path.parts)==3 and path.suffix in {'.bin','.json'}):raise ValueError('Archive outside expected model/cache paths')
         manifest=json.load(tar.extractfile('bundle_manifest.json'))
         if manifest['run_id']!=expected_run or names!={'bundle_manifest.json',*manifest['files']}:raise ValueError('Manifest membership mismatch')
         for name,digest in manifest['files'].items():
             content=tar.extractfile(name).read()
             if hashlib.sha256(content).hexdigest()!=digest:raise ValueError('Artifact checksum mismatch')
             path=destination/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(content)
+            metadata=tar.getmember(name);os.utime(path,(metadata.mtime,metadata.mtime))
     return destination/'artifacts'/'runs'/expected_run
 
 def import_bundle(root,cipher,receipt,private_pem):
@@ -117,6 +121,17 @@ def import_bundle(root,cipher,receipt,private_pem):
                 if path.is_file() and (not (target/path.relative_to(incoming)).exists() or hashlib.sha256(path.read_bytes()).digest()!=hashlib.sha256((target/path.relative_to(incoming)).read_bytes()).digest()):raise FileExistsError('Conflicting immutable model run')
         else:
             target.parent.mkdir(parents=True,exist_ok=True);shutil.copytree(incoming,target)
+        source_cache=Path(stage)/'data'/'bronze';destination_cache=root/'data'/'bronze'
+        if source_cache.exists():
+            destination_cache.mkdir(parents=True,exist_ok=True)
+            for source in source_cache.iterdir():
+                target_cache=destination_cache/source.name
+                if target_cache.exists() and source.name=='www.football-data.co.uk.json':
+                    both=json.loads(target_cache.read_text())+json.loads(source.read_text())
+                    merged={json.dumps(r,sort_keys=True):r for r in both}
+                    atomic_json(target_cache,sorted(merged.values(),key=lambda r:r['time']))
+                elif not target_cache.exists() or source.stat().st_mtime>target_cache.stat().st_mtime:
+                    shutil.copy2(source,target_cache)
         # Independent historical research and media remain explicitly timestamped.
         for name in ['media','research']:
             if name in old and name not in payload:payload[name]=old[name]
@@ -140,7 +155,9 @@ def sync_latest(root,repository='HongQuang26/pitchops'):
     if not receipt:return {'status':'no_promoted_model'}
     existing=Path(root)/'artifacts'/'delivery_receipt.json'
     if existing.exists() and json.loads(existing.read_text()).get('sha256')==receipt['sha256']:return {'status':'up_to_date','run_id':receipt['run_id']}
-    private,public=recipient_keys(root)
+    private=Path(root)/'.keys'/'artifact-private.pem'
+    public=Path(root)/'.keys'/'artifact-public.pem'
+    if not private.is_file() or not public.is_file():raise FileNotFoundError('Restore the original artifact key from Drive; do not generate a replacement for an existing recipient')
     if fingerprint(public.read_bytes())!=receipt['recipient_sha256']:raise ValueError('Keep the original artifact key from Drive; this release is for a different key')
     expected=f'https://github.com/{repository}/releases/download/{receipt["tag"]}/model.enc'
     if receipt['asset_url']!=expected:raise ValueError('Release URL outside the expected repository')
@@ -150,3 +167,18 @@ def sync_latest(root,repository='HongQuang26/pitchops'):
         if total>MAX_BYTES:raise ValueError('Excessive release download')
         chunks.append(chunk)
     return import_bundle(root,b''.join(chunks),receipt,private.read_bytes())
+
+def managed_provider_guard(url):
+    if 'football-data.co.uk/' in url:
+        raise RuntimeError('Weekly downloads are managed by GitHub Actions. Sync its encrypted cache or import a manually downloaded workbook; do not create extra automated source requests in Colab.')
+
+def sync_and_manage(root):
+    """Use the CI cache on Colab and prevent a second automated download budget."""
+    try:result=sync_latest(root)
+    except requests.RequestException:
+        result={'status':'offline_using_local','message':'Could not reach GitHub; existing Drive artifacts retained.'}
+    if (Path(root)/'artifacts'/'delivery_receipt.json').is_file():
+        from .data import CachedHTTP
+        CachedHTTP.request_guard=managed_provider_guard
+        result['provider_mode']='managed CI cache; no extra football-data requests in Colab'
+    return result

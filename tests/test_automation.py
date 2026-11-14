@@ -106,7 +106,7 @@ def test_failed_deployment_gate_restores_previous_champion(tmp_path,keys,monkeyp
     from pitchops.weekly import train_weekly
     private,public=keys
     previous={'run_id':'champion'};atomic_json(tmp_path/'artifacts'/'latest.json',previous)
-    config={'history_seasons':2,'leagues':['E0'],'simulations':1,'automatic_retries':1,'minimum_test_matches':100,'maximum_test_log_loss_ratio':1.05,'maximum_in_season_match_age_days':21}
+    config={'schedule_utc':'23 7 * * 5','history_seasons':2,'leagues':['E0'],'simulations':1,'automatic_retries':1,'minimum_test_matches':100,'maximum_test_log_loss_ratio':1.05,'maximum_in_season_match_age_days':21}
     def run(*args,**kwargs):
         atomic_json(tmp_path/'artifacts'/'latest.json',{'run_id':'candidate'})
         return {'meta':{'run_id':'candidate','code_commit':'a'*40,'training_through':'2026-11-01','matches':10},'metrics':{'selected':'baseline','test':{'matches':3,'log_loss':2.0,'brier':.8,'goals_mae':1},'test_baseline':{'log_loss':1.0}},'quality':{},'leagues':{}},tmp_path
@@ -114,3 +114,27 @@ def test_failed_deployment_gate_restores_previous_champion(tmp_path,keys,monkeyp
     with pytest.raises(ValueError,match='quality gate'):train_weekly(tmp_path,config,public)
     assert json.loads((tmp_path/'artifacts'/'latest.json').read_text())==previous
     assert (tmp_path/'weekly_failure.json').exists()
+
+def test_encrypted_bundle_delivers_cache_but_excludes_private_keys(tmp_path,keys):
+    private,public=keys;source=tmp_path/'ci';destination=tmp_path/'drive';run='20261114-cache'
+    atomic_json(source/'artifacts'/'runs'/run/'snapshot.json',{'meta':{'run_id':run,'created_at':'2026-11-14T01:00:00+00:00','code_commit':'a'*40}})
+    cache=source/'data'/'bronze';cache.mkdir(parents=True)
+    (cache/'source.bin').write_bytes(b'cached academic workbook')
+    atomic_json(cache/'www.football-data.co.uk.json',[{'url':'new','time':2}])
+    atomic_json(destination/'data'/'bronze'/'www.football-data.co.uk.json',[{'url':'old','time':1}])
+    secret=source/'.keys'/'artifact-private.pem';secret.parent.mkdir();secret.write_bytes(private)
+    out=tmp_path/'delivery.enc';receipt=package_run(source,run,public,out)
+    plain=decrypt_bytes(out.read_bytes(),private)
+    with tarfile.open(fileobj=io.BytesIO(plain),mode='r:gz') as tar:
+        assert not any('.keys' in name or 'private.pem' in name for name in tar.getnames())
+    import_bundle(destination,out.read_bytes(),receipt,private)
+    assert (destination/'data'/'bronze'/'source.bin').read_bytes()==b'cached academic workbook'
+    assert {r['url'] for r in json.loads((destination/'data'/'bronze'/'www.football-data.co.uk.json').read_text())}=={'old','new'}
+    assert not (destination/'.keys').exists()
+
+
+def test_managed_colab_provider_blocks_duplicate_source_downloads():
+    from pitchops.artifact_sync import managed_provider_guard
+    with pytest.raises(RuntimeError,match='managed by GitHub Actions'):
+        managed_provider_guard('https://www.football-data.co.uk/mmz4281/2627/all.xlsx')
+    assert managed_provider_guard('https://raw.githubusercontent.com/hudl/open-data/master/data/competitions.json') is None
