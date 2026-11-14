@@ -33,6 +33,13 @@ jobs:
             requirements/runtime.txt
       - name: Install project
         run: python -m pip install -c requirements/runtime.txt -e '.[dev,automation]'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Test API, release fallback and build web
+        run: |
+          npm test
+          npm run build
       - name: Validate GitHub workflow expressions
         run: |
           go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7

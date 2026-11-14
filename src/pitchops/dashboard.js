@@ -65,7 +65,7 @@ function updateContext() {
   $('page-kicker').textContent = historical ? 'EVENT INTELLIGENCE / HISTORICAL REPLAY' : 'THE GAME, IN NUMBERS';
   $('asof').textContent = historical ? (r ? `${r.competition} · Cutoff ${r.as_of} · ${r.matches_observed}/${r.matches_total} trận quan sát` : 'Chưa có bộ nghiên cứu sự kiện. Chạy Event Research trong Colab.') : l ? `Trận đấu đến ${m.training_through || '—'} · Snapshot ${String(m.created_at || '').slice(0,10)} · Mùa ${String(l.season).slice(0,2)}/${String(l.season).slice(2)}` : 'Chưa có dữ liệu CLB.';
   $('snapshot-state').textContent = historical ? 'Replay lịch sử · không phải live' : 'Snapshot · không phải live';
-  $('side-model').textContent = (m.persistent_drive ? 'DRIVE / AUTO SAVE' : 'LOCAL SNAPSHOT') + ' · ' + String(DATA.metrics?.selected || 'RESEARCH').toUpperCase();
+  $('side-model').textContent = (DATA.web?.hosted ? 'VERCEL / API' : m.persistent_drive ? 'DRIVE / AUTO SAVE' : 'LOCAL SNAPSHOT') + ' · ' + String(DATA.metrics?.selected || 'RESEARCH').toUpperCase();
   $('footer-run').textContent = 'RUN ' + (m.run_id || '—');
   document.querySelectorAll('[data-league]').forEach(button => { const selected = button.dataset.league === leagueSelect.value; button.classList.toggle('active', selected); button.setAttribute('aria-pressed', String(selected)); });
 }

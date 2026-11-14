@@ -1,0 +1,16 @@
+.git
+.github
+.keys
+.env*
+data
+artifacts
+mlruns
+notebooks
+tests
+docs
+ci_workspace
+delivery
+*.joblib
+*.xlsx
+*.parquet
+*.enc

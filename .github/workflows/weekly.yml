@@ -42,10 +42,15 @@ jobs:
             requirements/runtime.txt
       - name: Install project
         run: python -m pip install -c requirements/runtime.txt -e '.[dev,automation]'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
       - name: Test before accessing providers
         run: |
           python scripts/validate_project.py
           python -m pytest -q --tb=short
+          npm test
+          npm run build
       - name: Check recovery schedule
         id: due
         env:

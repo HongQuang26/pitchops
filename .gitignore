@@ -27,3 +27,8 @@ ci_workspace/
 delivery/
 build/
 dist/
+
+# Built web assets and local platform linkage.
+public/
+.vercel/
+node_modules/

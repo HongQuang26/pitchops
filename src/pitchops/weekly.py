@@ -78,16 +78,22 @@ def promotion_gate(payload,config):
 def public_summary(payload,gate):
     return {'run_id':payload['meta']['run_id'],'code_commit':payload['meta']['code_commit'],'training_through':payload['meta']['training_through'],'matches':payload['meta']['matches'],'selected':payload['metrics']['selected'],'quality_gate':gate}
 
-def publish_release(remote,bundle,receipt):
+def publish_release(remote,bundle,receipt,web_artifact=None):
     tag='model-'+receipt['run_id']
-    release=remote.request('POST','releases',json={'tag_name':tag,'target_commitish':receipt['code_commit'],'name':'PitchOps model '+receipt['run_id'],'body':'Encrypted personal/academic model delivery. Decrypt in the owner Colab using the key stored on Drive. CI metrics are in the Actions summary.','draft':True,'prerelease':False})
+    release=remote.request('POST','releases',json={'tag_name':tag,'target_commitish':receipt['code_commit'],'name':'PitchOps model '+receipt['run_id'],'body':'Encrypted personal/academic model delivery for the owner Colab, plus derived web forecast projections. No raw workbook or model weights are in the public web snapshot. CI metrics are in the Actions summary.','draft':True,'prerelease':False})
     upload=f'https://uploads.github.com/repos/{remote.repository}/releases/{release["id"]}/assets'
-    with Path(bundle).open('rb') as stream:
-        response=requests.post(upload,params={'name':'model.enc'},data=stream,headers={'Authorization':'Bearer '+remote.token,'Content-Type':'application/octet-stream'},timeout=(15,180));response.raise_for_status()
+    assets=[('model.enc',bundle)]
+    if web_artifact:assets.append(('web.json.gz',web_artifact[0]))
+    for name,path in assets:
+        with Path(path).open('rb') as stream:
+            response=requests.post(upload,params={'name':name},data=stream,headers={'Authorization':'Bearer '+remote.token,'Content-Type':'application/octet-stream'},timeout=(15,180));response.raise_for_status()
     # Publish only after the encrypted asset upload succeeds.
     release=remote.request('PATCH','releases/'+str(release['id']),json={'draft':False,'make_latest':'true'})
     receipt={**receipt,'tag':tag,'asset_url':f'https://github.com/{remote.repository}/releases/download/{tag}/model.enc','release_url':release['html_url']}
-    state=remote.read();state['promoted_model']=receipt;remote.write(state,'promote encrypted model after validation')
+    state=remote.read();state['promoted_model']=receipt
+    if web_artifact:
+        state['promoted_web']={**web_artifact[1],'asset_url':f'https://github.com/{remote.repository}/releases/download/{tag}/web.json.gz','release_url':release['html_url']}
+    remote.write(state,'promote approved model and web projections')
     return receipt
 
 def train_weekly(root,config,public_pem,remote=None,publish=False):
@@ -116,9 +122,18 @@ def train_weekly(root,config,public_pem,remote=None,publish=False):
         summary=public_summary(payload,gate);atomic_json(root/'weekly_report.json',summary)
         if not gate['approved']:raise ValueError('Deployment quality gate rejected candidate; previous release stays active')
         receipt=package_run(root,payload['meta']['run_id'],public_pem,root/'delivery'/'model.enc')
+        web_artifact=None
+        if config.get('web_enabled'):
+            import gzip
+            from .web_export import export_web
+            bootstrap=Path(config.get('web_bootstrap','web/bootstrap.json.gz'))
+            auxiliary=json.loads(gzip.decompress(bootstrap.read_bytes()))
+            web_path=root/'delivery'/'web.json.gz'
+            _,web_receipt=export_web(payload,gate,web_path,auxiliary)
+            web_artifact=(web_path,web_receipt)
         if publish:
             if remote is None:raise ValueError('Publishing needs the scoped Actions job token')
-            receipt=publish_release(remote,root/'delivery'/'model.enc',receipt)
+            receipt=publish_release(remote,root/'delivery'/'model.enc',receipt,web_artifact)
         state=remote.read() if remote else state
         state.update({'status':'completed','last_success_at':datetime.now(timezone.utc).isoformat(),'last_success':summary})
         if remote:remote.write(state,'complete weekly training')
@@ -139,7 +154,7 @@ def train_weekly(root,config,public_pem,remote=None,publish=False):
 def write_summary(value,path):
     if not path:return
     summary=value.get('summary',value);gate=summary.get('quality_gate',{})
-    lines=['## PitchOps weekly pipeline','',f"Status: **{value.get('status','verified')}**",'',f"Run: `{summary.get('run_id','validation only')}`",f"Test matches: {gate.get('test_matches','—')}",f"Test log loss: {gate.get('test_log_loss','—')} / baseline {gate.get('test_baseline_log_loss','—')}",'','Data/model bundles are encrypted. Private key remains on Drive.','']
+    lines=['## PitchOps weekly pipeline','',f"Status: **{value.get('status','verified')}**",'',f"Run: `{summary.get('run_id','validation only')}`",f"Test matches: {gate.get('test_matches','—')}",f"Test log loss: {gate.get('test_log_loss','—')} / baseline {gate.get('test_baseline_log_loss','—')}",'','Raw/model bundles are encrypted; their private key remains on Drive. The public web projection contains derived forecasts and public artwork metadata only.','']
     with Path(path).open('a') as stream:stream.write('\n'.join(lines))
 
 def main():

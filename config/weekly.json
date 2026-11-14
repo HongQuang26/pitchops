@@ -16,5 +16,7 @@
   "maximum_test_log_loss_ratio": 1.05,
   "maximum_in_season_match_age_days": 21,
   "automatic_retries": 2,
-  "artifact_recipient": "config/artifact-recipient.pem"
+  "artifact_recipient": "config/artifact-recipient.pem",
+  "web_enabled": true,
+  "web_bootstrap": "web/bootstrap.json.gz"
 }
