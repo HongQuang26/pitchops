@@ -45,7 +45,7 @@ jobs:
       - name: Test before accessing providers
         run: |
           python scripts/validate_project.py
-          python -m pytest -q
+          python -m pytest -q --tb=short
       - name: Check recovery schedule
         id: due
         env:

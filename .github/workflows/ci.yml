@@ -40,7 +40,7 @@ jobs:
       - name: Validate notebooks and dashboard syntax
         run: python scripts/validate_project.py
       - name: Test data, models, delivery and scheduling contracts
-        run: python -m pytest -q --junitxml=reports/pytest.xml
+        run: python -m pytest -q --tb=short --junitxml=reports/pytest.xml
       - name: Build distributable package
         run: python -m build
       - name: Upload test report only

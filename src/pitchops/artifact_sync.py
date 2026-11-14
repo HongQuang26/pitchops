@@ -137,7 +137,7 @@ def import_bundle(root,cipher,receipt,private_pem):
             if name in old and name not in payload:payload[name]=old[name]
         for name in ['research_code_commit','media_updated_at']:
             if name in old.get('meta',{}):payload['meta'][name]=old['meta'][name]
-        if payload.get('research') and not payload['meta'].get('research_code_commit'):
+        if payload.get('research',{}).get('run_id') and not payload['meta'].get('research_code_commit'):
             card=root/'artifacts'/'event_research'/'runs'/payload['research']['run_id']/'model_card.json'
             if card.is_file():payload['meta']['research_code_commit']=json.loads(card.read_text()).get('code_commit')
         stamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
