@@ -135,9 +135,14 @@ def import_bundle(root,cipher,receipt,private_pem):
         # Independent historical research and media remain explicitly timestamped.
         for name in ['media','research']:
             if name in old and name not in payload:payload[name]=old[name]
+        for name in ['research_code_commit','media_updated_at']:
+            if name in old.get('meta',{}):payload['meta'][name]=old['meta'][name]
+        if payload.get('research') and not payload['meta'].get('research_code_commit'):
+            card=root/'artifacts'/'event_research'/'runs'/payload['research']['run_id']/'model_card.json'
+            if card.is_file():payload['meta']['research_code_commit']=json.loads(card.read_text()).get('code_commit')
         stamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
         view=root/'artifacts'/'views'/(receipt['run_id']+'-sync-'+stamp);view.mkdir(parents=True,exist_ok=False)
-        payload['meta'].update({'workspace':str(root),'persistent_drive':str(root).startswith('/content/drive/MyDrive/'),'delivery':'GitHub Actions encrypted release','release_tag':receipt.get('tag')})
+        payload['meta'].update({'workspace':str(root),'persistent_drive':str(root).startswith('/content/drive/MyDrive/'),'delivery':'GitHub Actions encrypted release' if receipt.get('tag') else 'Local encrypted bootstrap validation','release_tag':receipt.get('tag')})
         atomic_json(view/'snapshot.json',payload)
         from .dashboard import render_dashboard
         render_dashboard(payload,view/'dashboard.html')

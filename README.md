@@ -4,7 +4,7 @@
 
 [Mở notebook trên Colab](https://colab.research.google.com/github/HongQuang26/pitchops/blob/main/notebooks/PitchOps_Colab.ipynb) · [Hướng dẫn chi tiết](docs/HUONG_DAN.md) · [Kiến trúc và lộ trình](docs/ARCHITECTURE.md) · [Nguồn và quyền sử dụng](docs/DATA_SOURCES.md)
 
-Đã chạy trên Colab với **2.252 trận**, **51 kiểm thử đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
+Đã chạy trên Colab với **2.252 trận**, **64 kiểm thử đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
 
 Event Lab đã chạy thêm **62 trận trước cutoff / 1.890 lượt cầu thủ**, PI test MAE **0,2496** so với baseline **0,3268**, spatial NLL **4,0408** so với uniform **4,5643**. Các kết quả này thuộc cohort lịch sử nhỏ, không gộp vào test CLB.
 
@@ -65,7 +65,7 @@ Nguồn quy định dữ liệu miễn phí dành cho cá nhân/nghiên cứu h�
 ## Cấu trúc
 
 ```text
-notebooks/PitchOps_Colab.ipynb  Điểm vào chính, toàn bộ thao tác trên Colab
+notebooks/PitchOps_Colab.ipynb  Colab: thử nghiệm, nhận model và dashboard
 src/pitchops/data.py           Provider, cache, budget và quality gates
 src/pitchops/features.py       Feature trước trận theo thời gian
 src/pitchops/models.py         Count models, baseline và đánh giá
@@ -79,7 +79,9 @@ src/pitchops/research.py       Event Lab end-to-end pipeline
 src/pitchops/cups.py           Group/knockout tournament engines
 src/pitchops/forecast_store.py Immutable forecast journal + delayed scoring
 src/pitchops/providers.py      Opt-in API/CSV adapters
-src/pitchops/schedule.py       Colab check-on-open receipts
+src/pitchops/weekly.py         Headless weekly training + deployment gates
+src/pitchops/artifact_sync.py  Encrypted model/cache delivery to Drive
+.github/workflows/            CI on push/PR + weekly scheduled training
 tests/test_contracts.py        Các bất biến quan trọng
 docs/                         Hướng dẫn, kiến trúc, giới hạn, lộ trình
 ```

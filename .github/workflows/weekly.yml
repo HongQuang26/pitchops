@@ -37,9 +37,11 @@ jobs:
         with:
           python-version: '3.13'
           cache: pip
-          cache-dependency-path: pyproject.toml
+          cache-dependency-path: |
+            pyproject.toml
+            requirements/runtime.txt
       - name: Install project
-        run: python -m pip install -e '.[dev,automation]'
+        run: python -m pip install -c requirements/runtime.txt -e '.[dev,automation]'
       - name: Test before accessing providers
         run: |
           python scripts/validate_project.py

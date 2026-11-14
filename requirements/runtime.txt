@@ -1,0 +1,7 @@
+# Numeric stack verified in Colab on the 2,252-match bootstrap run.
+# CI and Colab share these versions for compatible serialized models.
+numpy==2.4.6
+pandas==2.2.3
+scipy==1.16.3
+scikit-learn==1.6.1
+joblib==1.6.0

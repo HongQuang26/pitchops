@@ -44,3 +44,5 @@ Cache workbook và quota ledger cũng đi trong gói mã hóa. Khi đã dùng CI
 ## Phạm vi tự động hóa
 
 Job hằng tuần cập nhật **mô hình CLB ở 5 giải hỗ trợ**. Event Lab World Cup 2022 là cohort nghiên cứu lịch sử được giữ riêng, không giả thành dữ liệu cầu thủ hiện tại hay tự mở rộng toàn thế giới. Nguồn thương mại/API key vẫn cần quyền truy cập và mapping dữ liệu phù hợp.
+
+`requirements/runtime.txt` khóa NumPy/pandas/SciPy/scikit-learn/joblib theo stack đã kiểm chứng ở Colab; cả CI và notebook cài cùng constraint. Khi nâng phiên bản, thay constraint qua commit/PR và kiểm thử lại trước khi phát hành model mới.
