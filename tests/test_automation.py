@@ -141,3 +141,17 @@ def test_managed_colab_provider_blocks_duplicate_source_downloads():
     with pytest.raises(RuntimeError,match='managed by GitHub Actions'):
         managed_provider_guard('https://www.football-data.co.uk/mmz4281/2627/all.xlsx')
     assert managed_provider_guard('https://raw.githubusercontent.com/hudl/open-data/master/data/competitions.json') is None
+
+def test_shared_guard_waits_for_cron_jitter_without_exceeding_quota(monkeypatch):
+    import pitchops.weekly as weekly
+    clock=[2_000_000.0]
+    state={'provider_attempts':[{'time':clock[0]-7*86400+30,'url':'https://www.football-data.co.uk/a'},{'time':clock[0]-7*86400+31,'url':'https://www.football-data.co.uk/b'}]}
+    remote=GitHubState('test-token')
+    monkeypatch.setattr(remote,'read',lambda:state)
+    writes=[]
+    monkeypatch.setattr(remote,'write',lambda value,message:writes.append(value.copy()))
+    monkeypatch.setattr(weekly.time,'time',lambda:clock[0])
+    monkeypatch.setattr(weekly.time,'sleep',lambda seconds:clock.__setitem__(0,clock[0]+seconds))
+    remote.reserve('https://www.football-data.co.uk/mmz4281/2627/current.xlsx')
+    assert clock[0]>2_000_030 and len(writes)==1
+    assert sum(clock[0]-r['time']<7*86400 for r in writes[0]['provider_attempts'])<=2

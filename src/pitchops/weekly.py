@@ -38,9 +38,17 @@ class GitHubState:
     def reserve(self,url):
         # Atomic compare-and-swap before HTTP; a conflict aborts rather than racing.
         if not url.startswith('https://www.football-data.co.uk/mmz4281/'):return
-        state=self.read();now=time.time();attempts=state.setdefault('provider_attempts',[])
-        active=[r for r in attempts if now-float(r['time'])<7*86400 and 'football-data.co.uk' in r['url']]
-        if len(active)>=2:raise RuntimeError('Shared football-data two-attempt rolling weekly budget reached')
+        waited=0.0
+        while True:
+            state=self.read();now=time.time();attempts=state.setdefault('provider_attempts',[])
+            active=[r for r in attempts if now-float(r['time'])<7*86400 and 'football-data.co.uk' in r['url']]
+            if len(active)<2:break
+            # Cron jitter around the seven-day boundary must not cost a full week.
+            delay=sorted(float(r['time']) for r in active)[-2]+7*86400-now+1
+            if delay<=0 or waited+delay>300:raise RuntimeError('Shared football-data two-attempt rolling weekly budget reached')
+            pause=min(delay,60.0)
+            print(f'Waiting {pause:.0f}s for the existing provider budget window to expire.',flush=True)
+            time.sleep(pause);waited+=pause
         state['provider_attempts']=[r for r in attempts if now-float(r['time'])<90*86400]+[{'url':url,'time':now}]
         self.write(state,'reserve provider download before HTTP')
 

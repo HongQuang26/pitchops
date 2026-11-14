@@ -16,7 +16,7 @@ GitHub cron có thể trễ hoặc bị gián đoạn khi dịch vụ có sự c
 
 1. Checkout code main, cài môi trường và kiểm thử trước khi tải dữ liệu.
 2. Tính hai mùa theo ngày thực tế, ví dụ 2026-11 → `2526`, `2627`; không khóa cứng mã mùa cho những năm sau.
-3. Đọc ledger dùng chung; ghi nhận **trước** mỗi lần thử HTTP, bằng compare-and-swap SHA của GitHub Contents API. Tối đa hai lần thử tải Football-data trong 7 ngày trượt. Đã nhập ledger từ phiên Colab 13/11/2026 để không đặt lại hạn mức.
+3. Đọc ledger dùng chung; ghi nhận **trước** mỗi lần thử HTTP, bằng compare-and-swap SHA của GitHub Contents API. Tối đa hai lần thử tải Football-data trong 7 ngày trượt. Nếu cron lệch sát ranh giới, job đợi tối đa 5 phút, mỗi nhịp không quá 60 giây, rồi kiểm tra ledger lại trước khi tải. Đã nhập ledger từ phiên Colab 13/11/2026 để không đặt lại hạn mức.
 4. Tải hai bulk workbook, kiểm tra schema, nhãn, trùng trận; không cào từng đội/cầu thủ hoặc bypass 403/429. Retry phần tính toán tái dùng cache trong cùng job; không dùng retry vô hạn để vượt hạn mức nguồn.
 5. Feature theo thời gian, train/validation/test, refit và mô phỏng 5.000 lượt/giải. CPU và BLAS một luồng cho workload bảng nhỏ, tránh oversubscription.
 6. Quality gate: metrics hữu hạn, ít nhất 100 trận test, đủ 5 giải/thành viên, xác suất hợp lệ, không thiếu/nhãn trùng, độ mới dữ liệu và test log loss không vượt baseline quá 5%. Đây là ngưỡng triển khai, không chứng minh độ chính xác toàn cầu.
