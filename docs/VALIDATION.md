@@ -108,3 +108,14 @@ Browser QA v0.3: Event Lab hiển thị đúng 62/64 trận, 665 cầu thủ và
 - `refresh_dashboard` tạo view mới trên Drive rồi tái dùng khi mở lại. Kiểm tra hash xác nhận model snapshot không đổi; giữ **5 logo giải, 96 logo đội, 112 hồ sơ, 97 ảnh nguồn, 149 ảnh nhúng** và Event Lab `events-20261113T142018639134Z`. Không cào/train thêm để thay giao diện.
 - Kiểm thử mới bảo vệ JSON/template injection, NaN, view thất bại, lineage và chống nhân bản view. CSV chống tên nguồn thành công thức; link nguồn có HTTPS/host allowlist.
 - Lịch CI/CD và phạm vi 5 giải không thay đổi. Đây là đợt nâng cấp UI, không phải xác nhận một lượt train theo cron đã xảy ra.
+
+
+## Web/backend v0.6 — 14/11/2026
+
+- Code kiểm chứng `c5a03310ddc3fed73df6d2003767eb2c1d73c3e2`; [CI thành công](https://github.com/HongQuang26/pitchops/actions/runs/43582623427). Node 24.22.2: 6/6 backend tests và build web đạt; Python 3.13: **74 passed in 5.02s**.
+- Colab Node 22.23.4 cũng đạt 6/6 tests và build; Python **74 passed in 13.00s**. Không tải thêm dữ liệu nguồn hoặc train lại để tạo web.
+- Bootstrap lấy từ model `20261114T060129Z-b519b17d2a`, gate đạt, 1.458.459 byte gzip / khoảng 5 MB decoded; SHA256 `256db72b7c998b5657f58e0851f92e192b8ce25439c987b1818553f8d2b2abdb`. Dữ liệu được chia API theo giải và phần nghiên cứu; build kiểm tra từng phản hồi dưới 4 MB. Không chứa model weights, workbook hoặc đường dẫn Drive.
+- Đã chạy HTTP server cùng code API + frontend trong Colab, xem qua proxy riêng của Colab. `/api/predict?league=E0&home=Arsenal&away=Chelsea` trả 200 và xác suất chủ nhà `0.4888411499013382`; UI hiển thị **48.9%** cùng đúng run ID.
+- Web qua API nạp đủ 5 giải; ảnh Bukayo Saka và logo Arsenal tải thật; Event Lab đúng cutoff 2022-12-15, heatmap Messi 1.053 sự kiện và XI 11 người. MLOps panel đọc status backend/registry thực tế; đây là preview HTTP trên Colab, **không phải deployment Vercel**.
+- Tests kiểm tra hash/size/gate, chặn asset URL ngoài repository, cold-start bootstrap, lỗi origin, nhận release mới không redeploy, giữ bản cũ khi asset hỏng, validation cặp đội và API chỉ đọc. Python kiểm tra chỉ công bố registry sau cả hai asset upload thành công.
+- Quyền Vercel workspace `hong-quang-tech` trả **403**; cần chủ tài khoản xác nhận team access. Chưa có project/deployment production được tạo hoặc xác minh trong đợt này. Cần tiếp tục kiểm tra routing, CSP, API và UI trên URL production sau khi quyền được cấp.

@@ -4,9 +4,13 @@
 
 [Mở notebook trên Colab](https://colab.research.google.com/github/HongQuang26/pitchops/blob/main/notebooks/PitchOps_Colab.ipynb) · [Hướng dẫn chi tiết](docs/HUONG_DAN.md) · [Kiến trúc và lộ trình](docs/ARCHITECTURE.md) · [Nguồn và quyền sử dụng](docs/DATA_SOURCES.md)
 
-Đã chạy trên Colab với **2.252 trận**, **70 kiểm thử đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
+Đã chạy trên Colab với **2.252 trận**, **74 kiểm thử Python + 6 kiểm thử backend đạt**, test log loss **1.0198** so với baseline **1.0637** trên **473 trận test**. Xem [biên bản chạy thử và giới hạn](docs/VALIDATION.md).
 
 Event Lab đã chạy thêm **62 trận trước cutoff / 1.890 lượt cầu thủ**, PI test MAE **0,2496** so với baseline **0,3268**, spatial NLL **4,0408** so với uniform **4,5643**. Các kết quả này thuộc cohort lịch sử nhỏ, không gộp vào test CLB.
+
+## Web và backend v0.6
+
+Đã bổ sung cấu hình Vercel, backend Node.js 24 chỉ đọc, frontend tải dữ liệu qua API và bootstrap dự báo thật đã qua gate. Pipeline tuần công bố đồng thời model mã hóa và projection web; backend tự nhận release mới, không cần Colab mở hoặc deploy lại code mỗi lần train. [Triển khai và vận hành](docs/DEPLOYMENT.md). Việc tạo deployment trên workspace Vercel cần chủ tài khoản cấp quyền kết nối.
 
 ## Giao diện v0.5
 
