@@ -52,3 +52,5 @@ PI có công thức công khai trong `event_data.pitchops_rating`: khởi điể
 `providers.import_player_logs` nhận CSV có ID namespace, date, minutes, goals, rating, rating_source, position; giữ nguồn rating và kiểm tra trùng. Dùng được cho các hàm scorer/XI nhập tay. Không tự fuzzy-join cầu thủ khác nguồn.
 
 `schedule.run_if_due` lưu receipt thành công/lỗi và kiểm tra chu kỳ khi Colab gọi. Lỗi vẫn cho thử lại, thành công chưa đến hạn thì bỏ qua. Colab đóng không có tiến trình chạy. Workspace chỉ có một writer; không phải distributed job lock/queue.
+
+Từ v0.4, mô hình CLB có lịch GitHub Actions chạy độc lập với Colab; Event Lab vẫn là cohort lịch sử được giữ riêng. Xem [CI/CD](CICD.md).

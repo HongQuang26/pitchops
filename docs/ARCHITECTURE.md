@@ -42,7 +42,7 @@ flowchart TD
 4. **Quốc tế:** engine cấu hình league phase/group/knockout, quy tắc bốc thăm, hai lượt, extra time và penalties. Club và national-team ratings cần tách domain; chọn bất kỳ hai đội ngoài domain không được coi như trận cùng giải.
 5. **Vận hành production:** scheduler ổn định, provider API key trong secret manager, kho object immutable, registry champion/challenger qua nhiều run, promotion/rollback, prediction log + delayed outcome join + drift alerts, API authentication và dashboard hosting riêng.
 
-Chưa tự động chạy theo tuần trong khi Colab đóng. Không tự tạo GitHub Actions training vì yêu cầu hiện tại là chạy trên Colab. Có thể commit/push code từ notebook bằng token người dùng tự cấp trong Colab Secrets, hoặc dùng GitHub UI; không cần chia sẻ token qua chat.
+Từ v0.4 đã có GitHub Actions training theo tuần, độc lập với phiên Colab. Job dùng quality gate và phát hành bundle mã hóa; Drive nhận model/cache khi chạy bước đồng bộ trong notebook. Xem [CI/CD](CICD.md). Có thể commit/push code từ notebook bằng token người dùng tự cấp trong Colab Secrets, hoặc dùng GitHub UI; không cần chia sẻ token qua chat.
 
 ## Event Lab v0.3
 

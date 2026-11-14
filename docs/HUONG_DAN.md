@@ -48,7 +48,7 @@ StatsBomb adapter có `competitions()`, `matches(competition_id,season_id)` và 
 
 ## Cập nhật tuần sau
 
-Mở lại notebook, nối runtime, restore cùng workspace/cache, kéo code nếu cần rồi chạy pipeline. Snapshot mới có run ID mới; snapshot cũ giữ nguyên. Tự chạy không cần mở Colab sẽ cần môi trường scheduler riêng, chưa cấu hình ở bản này. Không có phiên huấn luyện chạy nền sau khi Colab đã tắt.
+Từ v0.4, GitHub Actions tự thu thập và train thứ Sáu 14:23 giờ Việt Nam, có kiểm tra phục hồi thứ Bảy. Khi mở Colab, chạy setup và nối Drive; `AUTO_SYNC_ACTIONS=True` nhận model/cache mã hóa đã duyệt. Giữ `RETRAIN=False` để không train lại khi chỉ xem kết quả. Xem [hướng dẫn CI/CD](CICD.md) để kiểm tra lỗi, hạn mức và cách đồng bộ.
 
 ## Event Lab v0.3
 

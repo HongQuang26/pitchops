@@ -70,6 +70,9 @@ def test_bad_candidate_cannot_pass_deployment_gate():
     assert promotion_gate(payload,config)['approved']
     payload['leagues']['E0']['forecasts']['A|B']['home_win']=.9
     assert not promotion_gate(payload,config)['approved']
+    payload['leagues']['E0']['forecasts']['A|B']['home_win']=.4
+    payload['leagues']['E0']['teams']=payload['leagues']['E0']['teams'][:18]
+    assert not promotion_gate(payload,config)['approved']
 
 def test_cached_http_guard_does_not_run_for_cache_hits(tmp_path,monkeypatch):
     import hashlib,time

@@ -17,6 +17,7 @@ import requests
 from .artifact_sync import package_run
 from .data import CachedHTTP,atomic_json
 from .storage import latest_dashboard
+from .simulation import EXPECTED_TEAMS
 
 REPOSITORY='HongQuang26/pitchops'
 STATE_PATH='automation/state.json'
@@ -58,7 +59,7 @@ def promotion_gate(payload,config):
         'no_duplicate_matches':quality.get('duplicate_matches')==0,
         'no_missing_goal_labels':quality.get('missing_goal_labels')==0,
         'league_coverage':set(config['leagues']).issubset(payload['leagues']),
-        'complete_membership':all(len(payload['leagues'].get(code,{}).get('teams',[]))>=18 for code in config['leagues'])
+        'complete_membership':all(len(payload['leagues'].get(code,{}).get('teams',[]))==EXPECTED_TEAMS[code] for code in config['leagues'])
     }
     month=datetime.now(timezone.utc).month
     if month not in {6,7}:checks['result_freshness']=quality.get('snapshot_age_days',999)<=config['maximum_in_season_match_age_days']
