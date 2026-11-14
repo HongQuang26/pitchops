@@ -88,3 +88,10 @@ Browser QA v0.3: Event Lab hiển thị đúng 62/64 trận, 665 cầu thủ và
 - Đã mã hóa bundle 7.777.555 byte / 11 file gồm model artifacts và cache, kiểm tra recipient/hash/manifest, giải mã và import về Drive; giữ nguyên dữ liệu Event Lab và ảnh. Private key không rời Drive. Đây là kiểm định chuyển giao **cục bộ**, chưa phải release GitHub được phát hành từ một phiên train theo cron.
 - Ledger công khai giữ nguyên hai lần tải nguồn đã thực hiện 13/11; không tải thêm để thử lịch. Lần thu thập chính theo lịch tiếp theo là **20/11/2026 lúc 14:23 giờ Việt Nam**. Check phục hồi 14/11 chỉ cần bỏ qua vì đã có lần train hợp lệ gần đây.
 - Trạng thái `promoted_model` để trống cho tới khi một phiên GitHub train đạt gate và upload release thật. Source mặc định không trỏ sang artifact giả hoặc model verify. Sau đó Colab tự nhận model/cache qua `AUTO_SYNC_ACTIONS`.
+
+### Xác nhận cuối sau khi khóa môi trường và kiểm tra ranh giới quota
+
+- [CI run #7](https://github.com/HongQuang26/pitchops/actions/runs/43566251185) và [Weekly MLOps verify #3](https://github.com/HongQuang26/pitchops/actions/runs/43566267089) đều thành công trên code `173f19b61261b71e4ab7f7f86e288f55d06c5661`.
+- **65 kiểm thử đạt**; thêm trường hợp cron chạy sớm vài giây so với cửa sổ 7 ngày: job đợi hạn mức hết trước HTTP, không tiêu thụ quá hai lượt. Colab cũng chạy lại đạt `65 passed in 6.81s`.
+- CI/Colab cài cùng numeric stack đã kiểm chứng trong `requirements/runtime.txt`. Gate từ chối Premier League chỉ có 18 đội dù giải 18 đội khác vẫn hợp lệ; không triển khai thành viên mùa giải chưa đủ.
+- Notebook riêng đã cập nhật setup và `AUTO_SYNC_ACTIONS=True`; kiểm tra ghi–đọc Drive đạt. Sau import mã hóa, vẫn có 5 logo giải, 96 logo đội, 112 hồ sơ/97 ảnh nguồn/149 ảnh nhúng và Event Lab `events-20261113T142018639134Z`; research code commit được giữ.
