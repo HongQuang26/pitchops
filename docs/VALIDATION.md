@@ -95,3 +95,16 @@ Browser QA v0.3: Event Lab hiển thị đúng 62/64 trận, 665 cầu thủ và
 - **65 kiểm thử đạt**; thêm trường hợp cron chạy sớm vài giây so với cửa sổ 7 ngày: job đợi hạn mức hết trước HTTP, không tiêu thụ quá hai lượt. Colab cũng chạy lại đạt `65 passed in 6.81s`.
 - CI/Colab cài cùng numeric stack đã kiểm chứng trong `requirements/runtime.txt`. Gate từ chối Premier League chỉ có 18 đội dù giải 18 đội khác vẫn hợp lệ; không triển khai thành viên mùa giải chưa đủ.
 - Notebook riêng đã cập nhật setup và `AUTO_SYNC_ACTIONS=True`; kiểm tra ghi–đọc Drive đạt. Sau import mã hóa, vẫn có 5 logo giải, 96 logo đội, 112 hồ sơ/97 ảnh nguồn/149 ảnh nhúng và Event Lab `events-20261113T142018639134Z`; research code commit được giữ.
+
+
+## UI v0.5 — rà soát ngày 14/11/2026
+
+- Code kiểm chứng: `10b469cf302d2f609b926fcf6cade92bf9259ab6`.
+- Colab: **70 passed in 14.98s**. [CI run #9](https://github.com/HongQuang26/pitchops/actions/runs/43569168483): **70 passed in 3.81s**, kiểm tra notebook/workflow/hai JavaScript và build wheel/sdist thành công. Các asset HTML/CSS/JS có trong package.
+- Dự đoán Liverpool–Chelsea hiển thị đúng snapshot; đổi sân chuyển chủ nhà sang Chelsea. Bảng phân phối có 49 ô xác suất. Bảng đua lọc Arsenal còn một dòng, tìm tên không có hiện empty state; xóa bộ lọc trả lại 20 đội và sắp xếp điểm hoạt động.
+- Cầu thủ: tìm Saka còn một hồ sơ; theo dõi đổi `aria-pressed=true`; dialog đúng tên/thông tin/nguồn; Escape đóng; reset trả lại trang đầu 24 hồ sơ. Favorites trong sandbox được ghi rõ chỉ giữ trong phiên.
+- Event Lab header dùng cutoff **2022-12-15**, riêng với CLB **2026-11-08**. ArrowRight chuyển tab Heatmap; France hiển thị Olivier Giroud/238 sự kiện, XI có 11 người, bảng cúp còn hai ứng viên. Metrics PI/scorer/spatial và CLB đối chiếu đúng payload.
+- Preview iframe 390 px có vùng nội dung 375 px sau scrollbar: `scrollWidth == clientWidth == 375` ở Match và Heatmap; không tràn ngang toàn trang. Nav và nút đổi sân cao 44 px. Bản desktop kiểm tra trực tiếp trong Chrome/Colab; không có lỗi console ghi nhận trong lượt rà soát. Chưa kiểm thử mọi thiết bị vật lý hoặc chứng nhận WCAG.
+- `refresh_dashboard` tạo view mới trên Drive rồi tái dùng khi mở lại. Kiểm tra hash xác nhận model snapshot không đổi; giữ **5 logo giải, 96 logo đội, 112 hồ sơ, 97 ảnh nguồn, 149 ảnh nhúng** và Event Lab `events-20261113T142018639134Z`. Không cào/train thêm để thay giao diện.
+- Kiểm thử mới bảo vệ JSON/template injection, NaN, view thất bại, lineage và chống nhân bản view. CSV chống tên nguồn thành công thức; link nguồn có HTTPS/host allowlist.
+- Lịch CI/CD và phạm vi 5 giải không thay đổi. Đây là đợt nâng cấp UI, không phải xác nhận một lượt train theo cron đã xảy ra.
