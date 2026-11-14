@@ -1,5 +1,9 @@
 # PitchOps trên Vercel
 
+**Production:** https://pitchops-two.vercel.app
+
+Đã xác minh ngày 14/11/2026: project `pitchops` trong workspace `hong-quang-tech`, Git repository `HongQuang26/pitchops` đã kết nối. Trang chính, health, predict và research trả HTTP 200 từ truy cập công khai. Model hiện tại là snapshot đã kiểm định; phiên train theo lịch sẽ công bố projection mới qua registry.
+
 Vercel phục vụ frontend và backend Node.js 24 trong cùng project. Pipeline Python
 vẫn chạy GitHub Actions mỗi **thứ Sáu 14:23**, phục hồi thứ Bảy 14:53 giờ Việt Nam.
 Không chạy train trong HTTP request hoặc giữ Colab mở để web hoạt động.

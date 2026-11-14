@@ -1,5 +1,7 @@
 # PitchOps
 
+**Web production:** https://pitchops-two.vercel.app
+
 **Dự án MLOps bóng đá với CI/CD GitHub Actions hằng tuần, Colab để thử nghiệm/xem kết quả và dashboard phong cách sân cỏ.** Đây là bản khởi tạo có pipeline thật và kiểm định theo thời gian; không phải hệ thống đã phủ mọi cầu thủ, mọi giải hoặc chạy nền 24/7.
 
 [Mở notebook trên Colab](https://colab.research.google.com/github/HongQuang26/pitchops/blob/main/notebooks/PitchOps_Colab.ipynb) · [Hướng dẫn chi tiết](docs/HUONG_DAN.md) · [Kiến trúc và lộ trình](docs/ARCHITECTURE.md) · [Nguồn và quyền sử dụng](docs/DATA_SOURCES.md)
@@ -10,7 +12,7 @@ Event Lab đã chạy thêm **62 trận trước cutoff / 1.890 lượt cầu th
 
 ## Web và backend v0.6
 
-Đã bổ sung cấu hình Vercel, backend Node.js 24 chỉ đọc, frontend tải dữ liệu qua API và bootstrap dự báo thật đã qua gate. Pipeline tuần công bố đồng thời model mã hóa và projection web; backend tự nhận release mới, không cần Colab mở hoặc deploy lại code mỗi lần train. [Triển khai và vận hành](docs/DEPLOYMENT.md). Việc tạo deployment trên workspace Vercel cần chủ tài khoản cấp quyền kết nối.
+Đã bổ sung cấu hình Vercel, backend Node.js 24 chỉ đọc, frontend tải dữ liệu qua API và bootstrap dự báo thật đã qua gate. Pipeline tuần công bố đồng thời model mã hóa và projection web; backend tự nhận release mới, không cần Colab mở hoặc deploy lại code mỗi lần train. [Triển khai và vận hành](docs/DEPLOYMENT.md). Đã deploy production và xác minh giao diện/API công khai tại [pitchops-two.vercel.app](https://pitchops-two.vercel.app).
 
 ## Giao diện v0.5
 

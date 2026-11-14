@@ -119,3 +119,14 @@ Browser QA v0.3: Event Lab hiển thị đúng 62/64 trận, 665 cầu thủ và
 - Web qua API nạp đủ 5 giải; ảnh Bukayo Saka và logo Arsenal tải thật; Event Lab đúng cutoff 2022-12-15, heatmap Messi 1.053 sự kiện và XI 11 người. MLOps panel đọc status backend/registry thực tế; đây là preview HTTP trên Colab, **không phải deployment Vercel**.
 - Tests kiểm tra hash/size/gate, chặn asset URL ngoài repository, cold-start bootstrap, lỗi origin, nhận release mới không redeploy, giữ bản cũ khi asset hỏng, validation cặp đội và API chỉ đọc. Python kiểm tra chỉ công bố registry sau cả hai asset upload thành công.
 - Quyền Vercel workspace `hong-quang-tech` trả **403**; cần chủ tài khoản xác nhận team access. Chưa có project/deployment production được tạo hoặc xác minh trong đợt này. Cần tiếp tục kiểm tra routing, CSP, API và UI trên URL production sau khi quyền được cấp.
+
+
+## Xác minh production Vercel — 14/11/2026
+
+- **URL công khai:** https://pitchops-two.vercel.app ; immutable deployment hostname `pitchops-jzb0p9f6a-hong-quang-tech.vercel.app`. Vercel hiển thị **Deployed to Production / Ready**, source `main` commit `7dd4390358f57e96d3a9c2e37fcb7194bd9cfea0`.
+- Project `pitchops`, ID `prj_cbJhMIpX57wqx8EEHyaLSUPxb7as`, workspace `hong-quang-tech`. Settings → Git xác nhận **Connected Git Repository: HongQuang26/pitchops**. Kết nối API quản trị Vercel vẫn thiếu quyền scope, nhưng deployment và website công khai đã hoạt động; đã kiểm tra bằng UI tài khoản và HTTP công khai.
+- HTTP công khai không dùng cookie/token: `/` **200**, có CSP và `X-Content-Type-Options: nosniff`; `/api/health` **200**, `ready=true`, `degraded=false`, 5 giải; `/api/predict` **200**, đúng run `20261114T060129Z-b519b17d2a` và `home_win=0.4888411499013382`; `/api/research?part=overview` **200**, cutoff `2022-12-15`.
+- Browser production: chọn Arsenal–Chelsea hiển thị **48.9%**, 49 ô tỉ số; miniface Bukayo Saka và logo Arsenal tải thật; heatmap Messi 1.053 sự kiện, XI 11 người; header replay đúng cohort. Screenshot trong `docs/images/production.jpg`.
+- [Weekly MLOps verify #4](https://github.com/HongQuang26/pitchops/actions/runs/43585148199) thành công trên source production; đây là verify, không phải train hay download nguồn.
+- [Lượt phục hồi theo schedule](https://github.com/HongQuang26/pitchops/actions/runs/43605748276) thành công; bước collect/train được **skipped** do có phiên Colab hợp lệ gần đây. Event thực tế là `schedule`, không phải manual dispatch. Job được tạo 21:36 giờ Việt Nam, trễ so với cron 14:53, thể hiện giới hạn best-effort của GitHub; không bảo đảm đúng phút.
+- Lịch chính giữ **14:23 thứ Sáu**, recovery **14:53 thứ Bảy** giờ Việt Nam. Cửa sổ chính tiếp theo là 20/11/2026; backend sẽ nhận projection khi job train đạt gate và release mới được công bố. `promoted_model`/`promoted_web` chưa được giả lập từ verify; hiện web dùng bootstrap đã kiểm định.
