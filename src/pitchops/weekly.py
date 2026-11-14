@@ -69,6 +69,11 @@ def promotion_gate(payload,config):
         'league_coverage':set(config['leagues']).issubset(payload['leagues']),
         'complete_membership':all(len(payload['leagues'].get(code,{}).get('teams',[]))==EXPECTED_TEAMS[code] for code in config['leagues'])
     }
+    if config.get('champions_enabled'):
+        ucl=payload['leagues'].get('UCL',{})
+        checks['ucl_independent_gate']=ucl.get('meta',{}).get('quality_gate',{}).get('approved') is True
+        checks['ucl_membership']=len(ucl.get('teams',[]))==36
+        checks['ucl_calendar']=len([f for f in ucl.get('fixtures',[]) if f.get('stage')=='league-phase'])==144
     month=datetime.now(timezone.utc).month
     if month not in {6,7}:checks['result_freshness']=quality.get('snapshot_age_days',999)<=config['maximum_in_season_match_age_days']
     for code,league in payload['leagues'].items():
@@ -112,7 +117,7 @@ def train_weekly(root,config,public_pem,remote=None,publish=False):
         # Only retry CPU/model work; provider cache hits must satisfy both attempts.
         for attempt in range(config.get('automatic_retries',2)):
             try:
-                payload,run_dir=run(root,seasons=rolling_seasons(count=config['history_seasons']),leagues=config['leagues'],simulations=config['simulations'],run_context={'environment':'GitHub Actions' if remote else 'Colab weekly validation','weekly_schedule_utc':config['schedule_utc'],'workflow_run_id':os.getenv('GITHUB_RUN_ID'),'workflow_url':f'https://github.com/{REPOSITORY}/actions/runs/'+os.environ['GITHUB_RUN_ID'] if os.getenv('GITHUB_RUN_ID') else None})
+                payload,run_dir=run(root,include_champions=config.get('champions_enabled',False),seasons=rolling_seasons(count=config['history_seasons']),leagues=config['leagues'],simulations=config['simulations'],run_context={'environment':'GitHub Actions' if remote else 'Colab weekly validation','weekly_schedule_utc':config['schedule_utc'],'workflow_run_id':os.getenv('GITHUB_RUN_ID'),'workflow_url':f'https://github.com/{REPOSITORY}/actions/runs/'+os.environ['GITHUB_RUN_ID'] if os.getenv('GITHUB_RUN_ID') else None})
                 break
             except (requests.RequestException,RuntimeError):raise
             except Exception:

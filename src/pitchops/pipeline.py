@@ -15,7 +15,7 @@ from .features import build_features, match_rows
 from .models import train_and_evaluate, predict_rows, score_distribution
 from .simulation import simulate_league
 
-def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=5000, local_files=None, run_context=None):
+def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=5000, local_files=None, run_context=None, include_champions=False):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     print("1/6 Collecting cached academic snapshots", flush=True)
@@ -72,6 +72,11 @@ def run(root, seasons=("2526", "2627"), leagues=None, as_of=None, simulations=50
     reference, recent = features[features.date < split], features[features.date >= split]
     payload["drift"] = [{"feature": col, "standardized_mean_shift": float((recent[col].mean()-reference[col].mean()) / max(reference[col].std(), 1e-6))} for col in numeric]
     payload["quality"] = {"duplicate_matches": 0, "missing_goal_labels": 0, "optional_corner_coverage": float(matches[["hc", "ac"]].notna().all(axis=1).mean()), "optional_shot_coverage": float(matches[["hs", "as"]].notna().all(axis=1).mean()), "snapshot_age_days": int((pd.Timestamp.now().normalize()-matches.date.max()).days)}
+    if include_champions:
+        from .champions import attach_champions
+        import shutil
+        ucl_dir = attach_champions(payload, root, as_of=as_of, simulations=simulations)
+        shutil.copytree(ucl_dir, run_dir/"ucl")
     atomic_json(run_dir / "snapshot.json", payload)
     atomic_json(run_dir / "metrics.json", report)
     atomic_json(run_dir / "model_card.json", metadata)

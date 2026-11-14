@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "HongQuang26/pitchops",
   "schedule_utc": "23 7 * * 5",
-  "schedule_vietnam": "14:23 thứ Sáu hằng tuần",
+  "schedule_vietnam": "14:23 th\u1ee9 S\u00e1u h\u1eb1ng tu\u1ea7n",
   "leagues": [
     "E0",
     "SP1",
@@ -18,5 +18,6 @@
   "automatic_retries": 2,
   "artifact_recipient": "config/artifact-recipient.pem",
   "web_enabled": true,
-  "web_bootstrap": "web/bootstrap.json.gz"
+  "web_bootstrap": "web/bootstrap.json.gz",
+  "champions_enabled": true
 }

@@ -101,3 +101,15 @@ docs/                         Hướng dẫn, kiến trúc, giới hạn, lộ t
 Không có nguồn miễn phí nào đã được xác minh ở đây cung cấp đầy đủ và cập nhật toàn bộ cầu thủ/thể thức của mọi quốc gia. Mô phỏng giữ cố định sức mạnh đội, suy ra các cặp đấu còn lại từ vòng tròn hai lượt và dùng GD/GF, nên là kịch bản xấp xỉ, đặc biệt với giải dùng đối đầu hoặc playoff. Đội mới hoặc ít dữ liệu sẽ có bất định cao hơn. Một lần test tốt không chứng minh có ích cho mọi mùa hoặc mọi giải; cần backtest nhiều mùa, ablation, calibration riêng và giám sát trước production.
 
 Thu thập/huấn luyện hằng tuần dùng GitHub Actions; Drive nhận gói model/cache mã hóa khi chạy bước đồng bộ ở Colab. Từ v0.4 đã có GitHub Actions chạy CPU thật theo lịch, không gọi vào phiên Colab đang tắt.
+
+
+### UEFA Champions League (v0.7)
+
+UCL có bộ thu thập và model riêng: ESPN scoreboard công khai, tối đa bốn request theo năm lịch mỗi lượt tuần; cache sáu ngày cho năm đang diễn ra, tái dùng năm đã kết thúc. API công khai không có SLA. Không tải từng trận hoặc dùng key bí mật. Giữ provider team/fixture ID, không nối tên gần đúng với giải quốc nội. Chỉ dùng kết quả FT đã xác minh 90 phút trước cutoff; loại hiệp phụ/luân lưu khỏi nhãn.
+
+- 36 đội, toàn bộ 144 lịch vòng phân hạng, mỗi đội 8 đối thủ (4 nhà/4 khách), logo UCL và từng đội.
+- Dự đoán mọi cặp đội: xác suất 90 phút, bàn, góc/cú sút nếu có nhãn, lưới tỉ số, over 2.5 và BTTS. UCL có chronological validation/test và quality gate độc lập (ít nhất 60 trận test, log loss không quá 1.05 lần baseline).
+- Mô phỏng Top 8, Top 24, vòng 16, tứ kết, bán kết, chung kết và vô địch theo nhánh cặp thứ hạng, hai lượt và chung kết trung lập. Đây là kịch bản bốc thăm tương lai; khi xuất hiện lịch knock-out cụ thể, race trước bốc thăm được tạm dừng thay vì bỏ qua lịch/kết quả đó. Phân hạng xử lý đến tổng bàn của đối thủ; điểm kỷ luật/hệ số còn thiếu dùng random tie có ghi rõ. Không có away goals; hiệp phụ 1/3 kỳ vọng, penalties 50/50.
+- Lịch đấu có lọc đội, trạng thái, khoảng ngày và nút mở dự đoán. Trận cũ mở kịch bản model hiện tại, không được gọi là dự báo trước trận lịch sử. `/api/fixtures?league=UCL&team=Arsenal&status=upcoming` cung cấp lịch thực. API predict trả đúng cutoff và model_run_id riêng UCL.
+
+`config/weekly.json` bật `champions_enabled=true`; collect → train UCL → gate → encrypted model + derived web release chạy cùng job tuần. UCL lỗi sẽ giữ nguyên bản phát hành trước, không đẩy candidate thiếu giải. Có thể chạy `enrich_champions(WORKSPACE)` trong Colab để bổ sung UCL vào view mà không train lại quốc nội. `USE_DRIVE=True` vẫn mặc định. Chưa có miniface/ratings/heatmap sự kiện UCL hiện tại; Event Lab vẫn là cohort WC2022 riêng.

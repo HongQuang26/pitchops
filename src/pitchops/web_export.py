@@ -39,8 +39,10 @@ def public_projection(payload, gate, auxiliary=None):
                        'raw_match_data':False, 'model_weights':False},
     }
     for code, league in payload['leagues'].items():
-        fields = {'name','season','teams','forecasts','race','matches','last_result','sparse_teams'}
+        fields = {'name','season','teams','forecasts','race','matches','last_result','sparse_teams','format','fixtures','metrics','meta'}
         result['leagues'][code] = {key:copy.deepcopy(value) for key,value in league.items() if key in fields}
+        if 'meta' in league:
+            result['leagues'][code]['meta'] = {k:copy.deepcopy(v) for k,v in league['meta'].items() if k in META_FIELDS | {'quality_gate','source_url','excluded','label_scope'}}
     media = payload.get('media') or auxiliary.get('media')
     if media:
         result['media'] = without_embedded_images(media)

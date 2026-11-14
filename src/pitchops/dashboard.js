@@ -10,8 +10,8 @@ const MEDIA = {...(DATA.media || {}), leagues:DATA.media?.leagues || {}, teams:D
 const leagues = DATA.leagues || {};
 const leagueSelect = $('league');
 let page = 'overview', playerLimit = 24, playerLeague = null, searchTimer;
-const pages = {overview:'Một góc nhìn trước trận.', match:'Trận đấu của bạn. Góc nhìn của bạn.', race:'Ai sẽ về đích đầu tiên?', players:'Những gương mặt của trận đấu.', expert:'Hiểu trận đấu từ từng sự kiện.', ops:'Mỗi dự đoán đều có dấu vết.'};
-const allowedImageHosts = new Set(['r2.thesportsdb.com','www.thesportsdb.com','raw.githubusercontent.com']);
+const pages = {fixtures:'Lịch đấu. Nhịp đập của giải.', overview:'Một góc nhìn trước trận.', match:'Trận đấu của bạn. Góc nhìn của bạn.', race:'Ai sẽ về đích đầu tiên?', players:'Những gương mặt của trận đấu.', expert:'Hiểu trận đấu từ từng sự kiện.', ops:'Mỗi dự đoán đều có dấu vết.'};
+const allowedImageHosts = new Set(['r2.thesportsdb.com','www.thesportsdb.com','raw.githubusercontent.com','a.espncdn.com']);
 function safeHref(value, hosts = new Set(['www.thesportsdb.com','thesportsdb.com','github.com','raw.githubusercontent.com'])) {
   try { const url = new URL(value); return url.protocol === 'https:' && hosts.has(url.hostname) && !url.username && !url.password ? url.href : ''; } catch { return ''; }
 }
@@ -50,6 +50,7 @@ if (leagues.E0) leagueSelect.value = 'E0';
 $('league-switcher').innerHTML = Object.entries(leagues).map(([code, league]) => `<button class="league-choice" data-league="${esc(code)}" aria-pressed="false">${imageBox(MEDIA.leagues[code], league.name)}<span>${esc(league.name)}</span></button>`).join('');
 const icons = {
   overview:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  fixtures:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6m10-6v6M3 11h18"/>',
   match:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M12 5v14M2 9h4v6H2m20-6h-4v6h4"/><circle cx="12" cy="12" r="3"/>',
   race:'<path d="M8 3h8v6a4 4 0 0 1-8 0V3Zm0 2H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4M12 13v7m-4 1h8"/>',
   players:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2m1-17a3 3 0 0 1 0 6m2 4a6 6 0 0 1 3 5v2"/>',
@@ -59,13 +60,13 @@ const icons = {
 document.querySelectorAll('[data-icon]').forEach(node => { node.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons[node.dataset.icon] + '</svg>'; });
 
 function updateContext() {
-  const m = DATA.meta || {}, l = current(), historical = page === 'expert', r = DATA.research;
+  const l = current(), m = l?.meta || DATA.meta || {}, historical = page === 'expert', r = DATA.research;
   $('league-context').classList.toggle('hidden', historical || !l);
   $('page-title').textContent = pages[page];
   $('page-kicker').textContent = historical ? 'EVENT INTELLIGENCE / HISTORICAL REPLAY' : 'THE GAME, IN NUMBERS';
   $('asof').textContent = historical ? (r ? `${r.competition} · Cutoff ${r.as_of} · ${r.matches_observed}/${r.matches_total} trận quan sát` : 'Chưa có bộ nghiên cứu sự kiện. Chạy Event Research trong Colab.') : l ? `Trận đấu đến ${m.training_through || '—'} · Snapshot ${String(m.created_at || '').slice(0,10)} · Mùa ${String(l.season).slice(0,2)}/${String(l.season).slice(2)}` : 'Chưa có dữ liệu CLB.';
   $('snapshot-state').textContent = historical ? 'Replay lịch sử · không phải live' : 'Snapshot · không phải live';
-  $('side-model').textContent = (DATA.web?.hosted ? 'VERCEL / API' : m.persistent_drive ? 'DRIVE / AUTO SAVE' : 'LOCAL SNAPSHOT') + ' · ' + String(DATA.metrics?.selected || 'RESEARCH').toUpperCase();
+  $('side-model').textContent = (DATA.web?.hosted ? 'VERCEL / API' : m.persistent_drive ? 'DRIVE / AUTO SAVE' : 'LOCAL SNAPSHOT') + ' · ' + String((l?.metrics || DATA.metrics)?.selected || 'RESEARCH').toUpperCase();
   $('footer-run').textContent = 'RUN ' + (m.run_id || '—');
   document.querySelectorAll('[data-league]').forEach(button => { const selected = button.dataset.league === leagueSelect.value; button.classList.toggle('active', selected); button.setAttribute('aria-pressed', String(selected)); });
 }
@@ -85,7 +86,7 @@ function selectedForecast() {
   return l.forecasts?.[$('home').value + '|' + $('away').value] || null;
 }
 function renderOverview() {
-  const l = current(), m = DATA.meta || {}, report = DATA.metrics || {};
+  const l = current(), m = l.meta || DATA.meta || {}, report = l.metrics || DATA.metrics || {};
   const kpis = [
     ['TRẬN ĐÃ HỌC', Number(m.matches || 0).toLocaleString('vi-VN'), 'Dữ liệu trận đấu đã quan sát'],
     ['ĐỘI TRONG GIẢI', (l.teams || []).length, `${l.matches || 0} trận ở mùa đang chọn`],
@@ -109,18 +110,33 @@ function renderMatch() {
     let side = '<div class="card-head"><div><div class="eyebrow">TITLE RACE</div><h3>Đường đua đang mở.</h3><p class="muted">Khả năng vô địch theo mô phỏng mùa giải.</p></div><span class="badge">TOP 5</span></div>';
     if (l.race?.table?.length) side += l.race.table.slice(0,5).map((row,i) => `<div class="race-row"><span class="rank">${String(i+1).padStart(2,'0')}</span><div class="team-row"><span class="team-name">${badge(row.team)}${esc(row.team)}</span><div class="track" aria-hidden="true"><span style="width:${clamp(row.title)*100}%"></span></div></div><span class="pct">${pct(row.title)}</span></div>`).join('') + '<button class="card-link" data-go="race">Toàn bộ cuộc đua <span aria-hidden="true">→</span></button>';
     else side += '<div class="empty">'+esc(l.race?.reason || 'Chưa đủ thành viên mùa giải để mô phỏng.')+'</div>';
-    $('side-card').innerHTML = side + '<div class="note">Mô phỏng giữ sức mạnh đội bóng cố định; chưa áp dụng mọi luật đối đầu hoặc playoff.</div>';
+    $('side-card').innerHTML = side + '<div class="note">'+esc(l.format === 'ucl-league-phase-36' ? 'Vòng phân hạng + playoff + loại trực tiếp; kịch bản bốc thăm tương lai, sức mạnh cố định.' : 'Mô phỏng giữ sức mạnh đội bóng cố định; chưa áp dụng mọi luật đối đầu hoặc playoff.')+'</div>';
   }
 }
 function renderRace() {
-  const l = current(), race = l.race || {}, rows = race.table || [];
+  const l = current(), race = l.race || {}, rows = race.table || [], ucl = l.format === 'ucl-league-phase-36';
   $('csv').disabled = !rows.length;
   $('race-search').disabled = $('race-sort').disabled = !rows.length;
-  $('race-sub').textContent = rows.length ? `${Number(race.simulations || 0).toLocaleString('vi-VN')} mô phỏng · ${race.remaining_matches} cặp đấu còn lại được suy ra` : 'Chưa đủ dữ liệu để mô phỏng mùa giải.';
+  $('race-sub').textContent = rows.length ? `${Number(race.simulations || 0).toLocaleString('vi-VN')} mô phỏng · ${race.remaining_matches} trận ${ucl ? 'vòng phân hạng theo lịch nguồn còn lại' : 'còn lại được suy ra'}` : race.reason || 'Chưa đủ dữ liệu để mô phỏng mùa giải.';
+  const sortOptions = [['title','Khả năng vô địch'],['points','Điểm hiện tại'],['expected_points','Điểm kỳ vọng'],...(ucl ? [['top8','Top 8 trực tiếp'],['top24','Top 24'],['round16','Vòng 16 đội']] : []),['team','Tên đội A–Z']];
+  const oldSort = $('race-sort').value;
+  $('race-sort').replaceChildren(...sortOptions.map(([value,label]) => new Option(label,value)));
+  $('race-sort').value = sortOptions.some(([v])=>v===oldSort) ? oldSort : 'title';
   const query = normalize($('race-search').value), sort = $('race-sort').value;
   const filtered = rows.filter(row => normalize(row.team).includes(query)).slice().sort((a,b) => sort === 'team' ? a.team.localeCompare(b.team) : Number(b[sort])-Number(a[sort]));
-  $('race-table').innerHTML = filtered.length ? '<table class="race-table"><thead><tr>'+['Đội bóng','Đã đá','Điểm','Vô địch','Top 4','Nhóm 3 cuối','Điểm kỳ vọng','P10 – P90'].map(header => '<th scope="col">'+header+'</th>').join('')+'</tr></thead><tbody>'+filtered.map(row => `<tr><td><span class="team-name">${badge(row.team)}${esc(row.team)}</span></td><td>${esc(row.played)}</td><td><strong>${esc(row.points)}</strong></td><td class="title-cell">${pct(row.title)}</td><td>${pct(row.top4)}</td><td>${pct(row.bottom3)}</td><td>${num(row.expected_points)}</td><td>${num(row.points_p10)} – ${num(row.points_p90)}</td></tr>`).join('')+'</tbody></table>' : '<div class="empty">'+esc(rows.length ? 'Không có đội phù hợp. Xóa tên tìm kiếm để xem lại bảng.' : race.reason || 'Chưa có dữ liệu mùa giải.')+'</div>';
-  $('race-note').textContent = rows.length ? 'Kịch bản vòng tròn hai lượt; cặp đấu còn lại suy ra từ dữ liệu, chưa có ngày đấu chính thức. Top 4 và nhóm 3 cuối là nhóm thứ hạng, không khẳng định suất châu Âu hoặc xuống hạng. Khoảng P10–P90 phản ánh bất định kết quả theo mô hình cố định.' : 'Không hiển thị xác suất vô địch khi thiếu thành viên của mùa giải.';
+  const columns = ucl ? [['played','Đã đá'],['points','Điểm'],['title','Vô địch'],['top8','Top 8'],['top24','Top 24'],['round16','Vòng 16'],['quarterfinal','Tứ kết'],['semifinal','Bán kết'],['final','Chung kết'],['expected_points','Điểm kỳ vọng']] : [['played','Đã đá'],['points','Điểm'],['title','Vô địch'],['top4','Top 4'],['bottom3','Nhóm 3 cuối'],['expected_points','Điểm kỳ vọng']];
+  const probabilities = new Set(['title','top8','top24','round16','quarterfinal','semifinal','final','top4','bottom3']);
+  $('race-table').innerHTML = filtered.length ? '<table class="race-table"><thead><tr><th scope="col">Đội bóng</th>'+columns.map(([,name])=>'<th scope="col">'+esc(name)+'</th>').join('')+'<th scope="col">P10 – P90 điểm</th></tr></thead><tbody>'+filtered.map(row => '<tr><td><span class="team-name">'+badge(row.team)+esc(row.team)+'</span></td>'+columns.map(([key])=>'<td class="'+(key==='title' ? 'title-cell' : '')+'">'+(probabilities.has(key) ? pct(row[key]) : num(row[key],key==='expected_points' ? 2 : 0))+'</td>').join('')+'<td>'+num(row.points_p10,0)+' – '+num(row.points_p90,0)+'</td></tr>').join('')+'</tbody></table>' : '<div class="empty">'+esc(rows.length ? 'Không có đội phù hợp. Xóa tên tìm kiếm để xem lại bảng.' : race.reason || 'Chưa có dữ liệu mùa giải.')+'</div>';
+  $('race-note').textContent = ucl ? (race.assumptions || []).join(' ') : rows.length ? 'Kịch bản vòng tròn hai lượt; cặp đấu còn lại suy ra từ dữ liệu, chưa có ngày đấu chính thức. Top 4 và nhóm 3 cuối là nhóm thứ hạng, không khẳng định suất châu Âu hoặc xuống hạng. Khoảng P10–P90 phản ánh bất định kết quả theo mô hình cố định.' : 'Không hiển thị xác suất vô địch khi thiếu thành viên của mùa giải.';
+}
+function renderFixtures() {
+  const l=current(), calendar=l.fixtures || [], teamSelect=$('fixture-team'), old=teamSelect.value;
+  teamSelect.replaceChildren(new Option('Tất cả đội','all'),...l.teams.map(t=>new Option(t,t)));
+  teamSelect.value=l.teams.includes(old) ? old : 'all';
+  const state=$('fixture-state').value, team=teamSelect.value, from=$('fixture-from').value, to=$('fixture-to').value;
+  const rows=calendar.filter(f=>(team==='all' || f.home===team || f.away===team) && (state==='all' || (state==='completed' ? f.status==='completed' : f.status!=='completed')) && (!from || f.date.slice(0,10)>=from) && (!to || f.date.slice(0,10)<=to));
+  $('fixture-count').textContent = calendar.length ? `${rows.length} / ${calendar.length} trận · giờ Việt Nam · lịch từ ESPN, cập nhật theo snapshot` : 'Chưa có lịch đấu xác thực của giải này. Chọn UEFA Champions League để xem lịch.';
+  $('fixture-list').innerHTML=rows.map(f=>{const complete=f.status==='completed'; return `<article class="fixture-row"><div class="fixture-time"><strong>${esc(new Date(f.date).toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}))}</strong><small>${esc(new Date(f.date).toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit'}))} · ${esc(f.stage)}</small></div><div class="fixture-pair"><span class="team-name">${badge(f.home)}${esc(f.home)}</span><strong class="fixture-score">${complete ? esc(f.score?.join(' : ')) : 'VS'}</strong><span class="team-name">${badge(f.away)}${esc(f.away)}</span></div><button class="outline" data-fixture="${esc(f.id)}">${complete ? 'Kịch bản hiện tại' : 'Xem dự đoán'} ↗</button></article>`;}).join('') || '<div class="empty">'+(calendar.length ? 'Không có trận phù hợp bộ lọc.' : 'Nguồn hiện tại chưa cung cấp lịch đầy đủ cho giải đang chọn.')+'</div>';
 }
 
 // Pre-index source text once. Search never rebuilds league options or hidden screens.
@@ -168,7 +184,7 @@ function resetPlayers() {
   clearTimeout(searchTimer); $('player-search').value = ''; $('player-team').value = 'all'; $('player-position').value = 'all'; $('favorite-only').checked = false; renderPlayers(true);
 }
 function renderOps() {
-  const report = DATA.metrics || {}, m = DATA.meta || {}, quality = DATA.quality || {};
+  const l = current(), report = l?.metrics || DATA.metrics || {}, m = l?.meta || DATA.meta || {}, quality = leagueSelect.value==='UCL' ? {duplicate_matches:0,missing_goal_labels:0,snapshot_age_days:Math.max(0,Math.floor((Date.now()-Date.parse(m.training_through))/86400000))} : DATA.quality || {};
   $('ops-summary').textContent = `Model: ${report.selected || '—'} · ${report.test?.matches || 0} trận test · Log loss ${num(report.test?.log_loss)} / baseline ${num(report.test_baseline?.log_loss)}. Lịch nền và phiên snapshot là hai trạng thái riêng; xem Actions để biết kết quả mới nhất.`;
   $('metrics-table').innerHTML = table(['Chỉ số test','Được chọn','Baseline'], ['log_loss','brier','goals_mae','accuracy'].map(key => [key,key === 'accuracy' ? pct(report.test?.[key]) : num(report.test?.[key]),key === 'accuracy' ? pct(report.test_baseline?.[key]) : num(report.test_baseline?.[key])]));
   const bins = report.test?.reliability || [];
@@ -184,6 +200,7 @@ function renderActive() {
   if (page === 'overview') renderOverview();
   if (page === 'overview' || page === 'match') renderMatch();
   if (page === 'race') renderRace();
+  if (page === 'fixtures') renderFixtures();
   if (page === 'players') renderPlayers();
 }
 function routeHash() {
@@ -196,7 +213,7 @@ function saveRoute(push = false) {
 }
 function nav(next, focus = true, save = true) {
   page = Object.hasOwn(pages,next) ? next : 'overview';
-  for (const id of ['overview-page','match-section','race-page','players-page','expert-page','ops-page']) $(id).classList.add('hidden');
+  for (const id of ['overview-page','match-section','race-page','players-page','expert-page','ops-page','fixtures-page']) $(id).classList.add('hidden');
   const hasClubData = !!current();
   if (page === 'overview' && hasClubData) { $('overview-page').classList.remove('hidden'); $('match-section').classList.remove('hidden'); }
   else if (page === 'match' && hasClubData) $('match-section').classList.remove('hidden');
@@ -212,6 +229,8 @@ function restoreRoute() {
 }
 document.addEventListener('click', event => {
   const profile = event.target.closest('[data-profile]'), favorite = event.target.closest('[data-favorite]'), league = event.target.closest('[data-league]'), go = event.target.closest('[data-page],[data-go]');
+  const fixture = event.target.closest('[data-fixture]');
+  if (fixture) { const item = current()?.fixtures?.find(f=>f.id===fixture.dataset.fixture); if(item) {chooseTeams(item.home,item.away);nav('match');} }
   if (profile) openPlayer(profile.dataset.profile);
   if (favorite) {
     const id = favorite.dataset.favorite, wasFollowing = favoritePlayers.has(id); if (wasFollowing) favoritePlayers.delete(id); else favoritePlayers.add(id);
@@ -228,6 +247,8 @@ $('more-players').onclick = () => { playerLimit += 24; renderPlayers(); };
 $('reset-players').onclick = resetPlayers;
 $('player-search').oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => renderPlayers(true),180); };
 for (const id of ['player-team','player-position','favorite-only']) $(id).onchange = () => renderPlayers(true);
+for (const id of ['fixture-team','fixture-state','fixture-from','fixture-to']) $(id).onchange=renderFixtures;
+$('fixture-reset').onclick=()=>{$('fixture-team').value='all';$('fixture-state').value='upcoming';$('fixture-from').value='';$('fixture-to').value='';renderFixtures();};
 $('race-search').oninput = renderRace; $('race-sort').onchange = renderRace;
 leagueSelect.onchange = () => { chooseTeams(); renderActive(); saveRoute(); };
 function changeMatch() { if (page === 'overview') renderOverview(); renderMatch(); saveRoute(); }

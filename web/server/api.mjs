@@ -21,7 +21,15 @@ export function routeData(url, loaded) {
     if (!selected || !selected.teams.includes(home) || !selected.teams.includes(away)) return error(404,'Không có đội trong bộ dữ liệu này.');
     const forecast = selected.forecasts[home+'|'+away];
     if (!forecast) return error(404,'Chưa có dự báo cho cặp đấu.');
-    return result({run_id:data.meta.run_id,training_through:data.meta.training_through,league,home,away,forecast});
+    return result({run_id:data.meta.run_id,model_run_id:selected.meta?.run_id || data.meta.run_id,training_through:selected.meta?.training_through || data.meta.training_through,league,home,away,forecast});
+  }
+  if (endpoint === 'fixtures') {
+    if (!league || !Object.hasOwn(data.leagues,league)) return error(404,'Chọn một giải đấu được hỗ trợ.');
+    const selected=data.leagues[league], team=url.searchParams.get('team'), state=url.searchParams.get('status');
+    if (team && !selected.teams.includes(team)) return error(404,'Không có đội trong giải này.');
+    if (state && !['completed','upcoming','all'].includes(state)) return error(400,'Trạng thái lịch không hợp lệ.');
+    const fixtures=(selected.fixtures || []).filter(f=>(!team || f.home===team || f.away===team) && (!state || state==='all' || (state==='completed' ? f.status==='completed' : f.status!=='completed')));
+    return result({run_id:data.meta.run_id,league,available:Array.isArray(selected.fixtures),total:fixtures.length,fixtures});
   }
   if (endpoint === 'research') {
     if (!data.research) return result(null);

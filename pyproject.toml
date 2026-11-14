@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pitchops"
-version = "0.6.0"
+version = "0.7.0"
 description = "Colab-first reproducible football forecasting"
 requires-python = ">=3.11"
 dependencies = ["numpy>=1.26,<3", "pandas>=2.2,<3", "scipy>=1.12,<2", "scikit-learn>=1.5,<2", "requests>=2.32,<3", "joblib>=1.4,<2", "openpyxl>=3.1,<4"]

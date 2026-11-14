@@ -53,3 +53,16 @@ test('Public API does not accept write or training requests',async()=>{
   await handler({method:'POST',url:'/api/predict'},response);
   assert.equal(response.code,405);assert.equal(response.headers.Allow,'GET, HEAD');
 });
+
+test('UCL API keeps its own model cutoff and filters actual fixtures',()=>{
+  const item=bundle();
+  item.snapshot.leagues.UCL={name:'UEFA Champions League',teams:['A','B'],meta:{run_id:'ucl-1',training_through:'2026-11-04'},forecasts:{'A|B':{home_win:.6}},fixtures:[{id:'1',home:'A',away:'B',status:'completed'},{id:'2',home:'B',away:'A',status:'pre'}]};
+  const get=path=>routeData(new URL('https://test/api/'+path),loaded(item.snapshot));
+  assert.equal(get('predict?league=UCL&home=A&away=B').body.training_through,'2026-11-04');
+  assert.equal(get('predict?league=UCL&home=A&away=B').body.model_run_id,'ucl-1');
+  assert.deepEqual(get('fixtures?league=UCL&team=A&status=upcoming').body.fixtures.map(f=>f.id),['2']);
+  assert.equal(get('fixtures?league=UCL&team=unknown').status,404);
+  assert.equal(get('fixtures?league=UCL&status=bad').status,400);
+  assert.equal(get('fixtures?league=__proto__').status,404);
+  assert.equal(get('fixtures?league=E0').body.available,false);
+});
