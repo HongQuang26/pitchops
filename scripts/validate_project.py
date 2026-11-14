@@ -13,5 +13,6 @@ for path in (root/'notebooks').glob('*.ipynb'):
 for path in (root/'.github'/'workflows').glob('*.yml'):
     data=yaml.load(path.read_text(),Loader=yaml.BaseLoader)
     if not isinstance(data,dict) or not {'on','jobs'}.issubset(data):raise ValueError('Invalid workflow: '+path.name)
-subprocess.run(['node','--check',str(root/'src'/'pitchops'/'analytics.js')],check=True)
+for path in (root/'src'/'pitchops').glob('*.js'):
+    subprocess.run(['node','--check',str(path)],check=True)
 print('Notebook Python, workflow YAML and dashboard JavaScript syntax verified.')
