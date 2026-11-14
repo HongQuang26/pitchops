@@ -34,3 +34,33 @@ def test_weekly_club_projection_preserves_separate_historical_research(tmp_path)
     assert 'raw_provider_events' not in result['research']
     assert json.loads(gzip.decompress((tmp_path/'web.json.gz').read_bytes()))==result
     assert receipt['bytes']==(tmp_path/'web.json.gz').stat().st_size
+
+
+def test_model_and_web_registry_are_updated_only_after_both_assets_upload(tmp_path,monkeypatch):
+    from pitchops.weekly import publish_release
+    from types import SimpleNamespace
+    import requests
+    class Remote:
+        repository='HongQuang26/pitchops'
+        token='test-only'
+        def __init__(self):self.state={'promoted_model':{'run_id':'old'}};self.calls=[]
+        def request(self,method,path,**kwargs):
+            self.calls.append((method,path))
+            return {'id':123,'html_url':'https://github.com/HongQuang26/pitchops/releases/tag/model-new'}
+        def read(self):return self.state.copy()
+        def write(self,state,message):self.state=state
+    remote=Remote();model=tmp_path/'model.enc';web=tmp_path/'web.json.gz'
+    model.write_bytes(b'encrypted fixture');web.write_bytes(b'public derived fixture')
+    receipt={'run_id':'new','code_commit':'a'*40};web_receipt={'run_id':'new','sha256':'b'*64}
+    def fail_web(*args,**kwargs):
+        if kwargs['params']['name']=='web.json.gz':raise requests.HTTPError('Upload failed')
+        return SimpleNamespace(raise_for_status=lambda:None)
+    monkeypatch.setattr('pitchops.weekly.requests.post',fail_web)
+    with pytest.raises(requests.HTTPError):publish_release(remote,model,receipt,(web,web_receipt))
+    assert remote.state=={'promoted_model':{'run_id':'old'}}
+    assert not any(method=='PATCH' for method,_ in remote.calls)
+    monkeypatch.setattr('pitchops.weekly.requests.post',lambda *args,**kwargs:SimpleNamespace(raise_for_status=lambda:None))
+    publish_release(remote,model,receipt,(web,web_receipt))
+    assert remote.state['promoted_model']['run_id']=='new'
+    assert remote.state['promoted_web']['sha256']=='b'*64
+    assert remote.state['promoted_web']['asset_url'].endswith('/model-new/web.json.gz')
