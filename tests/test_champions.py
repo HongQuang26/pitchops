@@ -1,4 +1,7 @@
 import copy
+from datetime import datetime, timezone
+import json
+import os
 import pytest
 from pitchops.champions import normalize_events, validate_league_phase, simulate_champions, fetch_calendar
 
@@ -70,3 +73,30 @@ def test_archived_ucl_cache_is_reused_without_network(tmp_path,monkeypatch):
     (tmp_path/'ucl-espn-2024.bin').write_text('{"events":[]}')
     monkeypatch.setattr('pitchops.champions.requests.get',lambda *a,**k:pytest.fail('Unexpected network'))
     assert fetch_calendar(tmp_path,2024)['events']==[]
+
+
+def test_previous_year_cache_is_refreshed_if_saved_before_year_end(tmp_path, monkeypatch):
+    path = tmp_path / 'ucl-espn-2026.bin'
+    path.write_text('{"events":[]}')
+    stamp = datetime(2026, 12, 20, tzinfo=timezone.utc).timestamp()
+    os.utime(path, (stamp, stamp))
+    calls = []
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def raise_for_status(self): pass
+        def iter_content(self, size):
+            yield json.dumps({'events': [{'id': 'late-match'}]}).encode()
+
+    def get(*args, **kwargs):
+        calls.append(args[0])
+        return Response()
+
+    monkeypatch.setattr('pitchops.champions.requests.get', get)
+    now = datetime(2027, 1, 5, tzinfo=timezone.utc).timestamp()
+    assert fetch_calendar(tmp_path, 2026, now)['events'] == [{'id': 'late-match'}]
+    assert len(calls) == 1
+    os.utime(path, (now, now))  # Simulate the filesystem clock matching `now`.
+    assert fetch_calendar(tmp_path, 2026, now)['events'] == [{'id': 'late-match'}]
+    assert len(calls) == 1
