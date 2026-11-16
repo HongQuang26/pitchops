@@ -37,7 +37,12 @@ def fetch_calendar(cache, year, now=None):
     # Reuse successful inspections made in the owner's Colab as well.
     age = now - path.stat().st_mtime if path.exists() else float('inf')
     current_year = datetime.fromtimestamp(now, timezone.utc).year
-    if path.exists() and (year < current_year or age < 6 * 86400):
+    # A calendar-year cache created before the year ended can miss later
+    # fixtures or their results. Refresh it once after New Year's Day before
+    # treating it as an archive.
+    archive_start = datetime(year + 1, 1, 1, tzinfo=timezone.utc).timestamp()
+    archived = year < current_year and path.exists() and path.stat().st_mtime >= archive_start
+    if path.exists() and (archived or (year >= current_year and age < 6 * 86400)):
         raw = path.read_bytes()
     else:
         previous = json.loads(receipt.read_text()) if receipt.exists() else {}
