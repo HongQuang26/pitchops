@@ -24,12 +24,60 @@
     "run_id": "20261113T063801Z-b519b17d2a",
     "origin": "verified Colab training"
   },
-  "promoted_model": null,
+  "promoted_model": {
+    "run_id": "20261120T161343Z-b519b17d2a",
+    "created_at": "2026-11-20T16:13:43.486474+00:00",
+    "code_commit": "48619da1a56bf0670ce6502c7a53dde80d1f1940",
+    "sha256": "f5fa50dd6cbe4b10a16db21aeb9b74f2f5b2adc8564ccd8663cf501f81e56487",
+    "recipient_sha256": "5127ddb61b29a1570855ebb16e2b53d9c91ae613d77b5f5c9050c086551f68cf",
+    "bytes": 9501040,
+    "file_count": 21,
+    "tag": "model-20261120T161343Z-b519b17d2a",
+    "asset_url": "https://github.com/HongQuang26/pitchops/releases/download/model-20261120T161343Z-b519b17d2a/model.enc",
+    "release_url": "https://github.com/HongQuang26/pitchops/releases/tag/model-20261120T161343Z-b519b17d2a"
+  },
   "verification": {
     "status": "passed",
     "at": "2026-11-14T10:25:14.426426+00:00",
     "workflow_run_id": "43585148199"
   },
   "last_attempt_at": "2026-11-20T16:13:31.876214+00:00",
-  "workflow_run_id": "44771059705"
+  "workflow_run_id": "44771059705",
+  "promoted_web": {
+    "schema": 1,
+    "format": "pitchops-web-gzip-v1",
+    "run_id": "20261120T161343Z-b519b17d2a",
+    "code_commit": "48619da1a56bf0670ce6502c7a53dde80d1f1940",
+    "created_at": "2026-11-20T16:13:43.486474+00:00",
+    "training_through": "2026-11-08",
+    "sha256": "91c1bdd88341eaaffcb8161d15755c6f86bba9461193442a8f6100f778ebd8a0",
+    "bytes": 1808694,
+    "quality_gate": {
+      "approved": true,
+      "checks": {
+        "finite_metrics": true,
+        "enough_test_matches": true,
+        "baseline_regression_guard": true,
+        "no_duplicate_matches": true,
+        "no_missing_goal_labels": true,
+        "league_coverage": true,
+        "complete_membership": true,
+        "ucl_independent_gate": true,
+        "ucl_membership": true,
+        "ucl_calendar": true,
+        "result_freshness": true,
+        "probabilities_D1": true,
+        "probabilities_E0": true,
+        "probabilities_F1": true,
+        "probabilities_I1": true,
+        "probabilities_SP1": true,
+        "probabilities_UCL": true
+      },
+      "test_log_loss": 1.0197813266055065,
+      "test_baseline_log_loss": 1.0636733417435864,
+      "test_matches": 473
+    },
+    "asset_url": "https://github.com/HongQuang26/pitchops/releases/download/model-20261120T161343Z-b519b17d2a/web.json.gz",
+    "release_url": "https://github.com/HongQuang26/pitchops/releases/tag/model-20261120T161343Z-b519b17d2a"
+  }
 }
