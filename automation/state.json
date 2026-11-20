@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "running",
+  "status": "completed",
   "provider_attempts": [
     {
       "url": "https://www.football-data.co.uk/mmz4281/2526/all-euro-data-2025-2026.xlsx",
@@ -19,10 +19,38 @@
       "time": 1795191218.361229
     }
   ],
-  "last_success_at": "2026-11-13T06:38:01+00:00",
+  "last_success_at": "2026-11-20T16:13:55.719640+00:00",
   "last_success": {
-    "run_id": "20261113T063801Z-b519b17d2a",
-    "origin": "verified Colab training"
+    "run_id": "20261120T161343Z-b519b17d2a",
+    "code_commit": "48619da1a56bf0670ce6502c7a53dde80d1f1940",
+    "training_through": "2026-11-08",
+    "matches": 2252,
+    "selected": "poisson",
+    "quality_gate": {
+      "approved": true,
+      "checks": {
+        "finite_metrics": true,
+        "enough_test_matches": true,
+        "baseline_regression_guard": true,
+        "no_duplicate_matches": true,
+        "no_missing_goal_labels": true,
+        "league_coverage": true,
+        "complete_membership": true,
+        "ucl_independent_gate": true,
+        "ucl_membership": true,
+        "ucl_calendar": true,
+        "result_freshness": true,
+        "probabilities_D1": true,
+        "probabilities_E0": true,
+        "probabilities_F1": true,
+        "probabilities_I1": true,
+        "probabilities_SP1": true,
+        "probabilities_UCL": true
+      },
+      "test_log_loss": 1.0197813266055065,
+      "test_baseline_log_loss": 1.0636733417435864,
+      "test_matches": 473
+    }
   },
   "promoted_model": {
     "run_id": "20261120T161343Z-b519b17d2a",
